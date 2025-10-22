@@ -3,7 +3,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook } from "react-icons/fa";
 import Bg from "../assets/Bg.png";
 import { useNavigate } from "react-router-dom";
-import Login from "./Login.jsx";
+import SignIn from "./SignIn.jsx";
 import { useState } from "react";
 const SignUp = () => {
   const navigate=useNavigate();
@@ -18,7 +18,7 @@ const SignUp = () => {
     >
       {/* SIGN IN button */}
 
-      <button type="button" onClick={()=>navigate("/Login")} className="absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base hover:bg-black hover:text-white transition-all w-[136px] h-[48]">
+      <button type="button" onClick={()=>navigate("/SignIn")} className="absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base hover:bg-black hover:text-white transition-all w-[136px] h-[48]">
         SIGN IN
       </button>
 
