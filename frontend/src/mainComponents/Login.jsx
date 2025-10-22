@@ -1,11 +1,11 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook } from "react-icons/fa";
-import bg2Image from "./assets/bg2.png";
+import bg2 from "../assets/bg2.png";
 
-const LoginPage = () => {
+const Login = () => {
   return (
-    <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2Image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Top Navigation */}
       <div className="flex justify-between items-center px-6 md:px-10 py-6">
         <div className="flex items-center gap-3">
@@ -101,4 +101,4 @@ const LoginPage = () => {
     </div>
   );
 }
-export default LoginPage;
+export default Login;
