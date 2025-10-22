@@ -1,13 +1,10 @@
+import React from "react";
+import LoginPage from "./Login";
 
-
-function App() {
-  
-
+export default function App() {
   return (
-    <>
-      
-    </>
-  )
+    <div className="min-h-screen w-full">
+      <LoginPage />
+    </div>
+  );
 }
-
-export default App
