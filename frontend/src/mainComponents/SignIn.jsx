@@ -4,9 +4,28 @@ import { FaApple, FaFacebook } from "react-icons/fa";
 import bg2 from "../assets/bg2.png";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../API.js";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleSubmit = async (e) => {e.preventDefault();
+    try {
+      const res = await API.post("/auth/signin", formData);
+      localStorage.setItem("token", res.data.token);
+      alert("Sign In Successful");
+      if (res.status === 200) {
+        navigate("/UserName");
+      }
+    } catch (error) {
+      alert("Sign In Failed. Please check your credentials.");
+    }
+  }
+
   return (
     <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Top Navigation */}
