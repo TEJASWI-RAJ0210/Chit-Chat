@@ -2,8 +2,11 @@ import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook } from "react-icons/fa";
 import bg2 from "../assets/bg2.png";
+import {useState} from "react";
+import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const SignIn = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Top Navigation */}
@@ -16,7 +19,7 @@ const Login = () => {
             CHIT-CHAT
           </h1>
         </div>
-        <button className="backdrop-blur-xl bg-white/60 border border-gray-800 text-gray-800 px-5 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition">
+        <button onClick={() => navigate ("/")} className="backdrop-blur-xl bg-white/60 border border-gray-800 text-gray-800 px-5 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition">
           SIGN UP
         </button>
       </div>
@@ -101,4 +104,4 @@ const Login = () => {
     </div>
   );
 }
-export default Login;
+export default SignIn;

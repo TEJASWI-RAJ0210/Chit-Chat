@@ -2,7 +2,7 @@ import React from "react";
 import SignUp from "./mainComponents/SignUp.jsx";
 import {BrowserRouter,Routes,Route} from "react-router-dom"
 import UserName from "./mainComponents/UserName.jsx";
-import Login from "./mainComponents/Login.jsx";
+import SignIn from "./mainComponents/SignIn.jsx";
 
 const App=()=>{
   return (
@@ -10,7 +10,7 @@ const App=()=>{
     <Routes>    
     <Route path="/" element={<SignUp />}/>
     <Route path="/UserName" element={<UserName/>}/> 
-    <Route path="/Login" element={<Login/>}/>
+    <Route path="/SignIn" element={<SignIn/>}/>
     </Routes>
     </BrowserRouter>
   );
