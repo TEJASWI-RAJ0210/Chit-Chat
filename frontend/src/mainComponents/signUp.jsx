@@ -5,8 +5,28 @@ import Bg from "../assets/Bg.png";
 import { useNavigate } from "react-router-dom";
 import SignIn from "./SignIn.jsx";
 import { useState } from "react";
+import API from "../API.js";
 const SignUp = () => {
   const navigate=useNavigate();
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await API.post("/auth/signup", formData);
+      localStorage.setItem("token", res.data.token);
+      alert("Sign Up Successful");
+      if (res.status === 201) {
+        navigate("/UserName");
+      }
+    } catch (error) {
+      alert("Sign Up Failed. Please try again.");
+    }
+  };
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center relative px-4"
