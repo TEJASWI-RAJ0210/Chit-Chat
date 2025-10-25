@@ -5,28 +5,47 @@ import Bg from "../assets/Bg.png";
 import { useNavigate } from "react-router-dom";
 import SignIn from "./SignIn.jsx";
 import { useState } from "react";
-import API from "../API.js";
+import { signup} from "../API.js";
+
 const SignUp = () => {
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
   });
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
+
     try {
-      const res = await API.post("/auth/signup", formData);
-      localStorage.setItem("token", res.data.token);
+      const response = await signup(formData);
+      console.log("Signup successful:", response);
       alert("Sign Up Successful");
-      if (res.status === 201) {
+      // Redirect or show success message
+      if (response.status === 201) {
         navigate("/UserName");
       }
     } catch (error) {
-      alert("Sign Up Failed. Please try again.");
+      console.error("Signup error:", error);
+      setError(error.message || "Signup failed");
+      alert("Sign Up Failed. Please try again." + error.message);
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center relative px-4"
@@ -38,7 +57,11 @@ const SignUp = () => {
     >
       {/* SIGN IN button */}
 
-      <button type="button" onClick={()=>navigate("/SignIn")} className="absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base hover:bg-black hover:text-white transition-all w-[136px] h-[48]">
+      <button
+        type="button"
+        onClick={() => navigate("/SignIn")}
+        className="absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base hover:bg-black hover:text-white transition-all w-[136px] h-[48]"
+      >
         SIGN IN
       </button>
 
@@ -65,6 +88,9 @@ const SignUp = () => {
             <label className="block text-gray-700 mb-1 text-sm">Name</label>
             <input
               type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
               placeholder="John"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
             />
@@ -76,6 +102,9 @@ const SignUp = () => {
             </label>
             <input
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="johndoe@example.com"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
             />
@@ -86,6 +115,9 @@ const SignUp = () => {
             <div className="relative">
               <input
                 type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="**********"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
               />
@@ -111,9 +143,16 @@ const SignUp = () => {
         </div>
 
         {/* Create Account */}
-        <button className="w-full bg-[#101828] text-white py-3 rounded-md font-semibold hover:bg-[#2d3648] transition-all mb-4 text-sm">
-          CREATE AN ACCOUNT
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-[#101828] text-white py-3 rounded-md font-semibold hover:bg-[#2d3648] transition-all mb-4 text-sm"
+        >
+          {loading ? "Creating Account..." : "CREATE AN ACCOUNT"}
         </button>
+
+        {error && (
+          <p className="text-red-500 text-xs mb-4">{error}</p>
+        )}
 
         <p className="text-xs text-gray-600 mb-4">or continue with</p>
 
@@ -137,5 +176,5 @@ const SignUp = () => {
       </p>
     </div>
   );
-}
+};
 export default SignUp;
