@@ -4,9 +4,46 @@ import { FaApple, FaFacebook } from "react-icons/fa";
 import bg2 from "../assets/bg2.png";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { signin } from "../API.js";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+       ...formData, 
+       [e.target.name]: e.target.value 
+      });
+  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await signin(formData);
+      if (res?.status === 200 || res?.status === 201) {
+        localStorage.setItem("token", res.data.token);
+        alert("Sign In Successful");
+        navigate("/UserName");
+      } else {
+        throw new Error(res?.data?.message || 'Sign in failed');
+      }
+    } catch (error) {
+      console.error('SignIn error:', error);
+      setError(error.message || 'Sign In failed');
+      alert("Sign In Failed. Please check your credentials. " + (error.message || ''));
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Top Navigation */}
@@ -38,6 +75,9 @@ const SignIn = () => {
               Email Address
             </label>
             <input
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               type="email"
               placeholder="johndoe@example.com"
               className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
@@ -49,6 +89,9 @@ const SignIn = () => {
             <label className="block text-xs text-gray-600 mb-1">Password</label>
             <div className="relative">
               <input
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 type="password"
                 placeholder="***********"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
@@ -72,8 +115,8 @@ const SignIn = () => {
           </div>
 
           {/* Login Button */}
-          <button className="w-full bg-[#1F2B44] text-white py-3 rounded-xl font-medium hover:opacity-90 transition">
-            LOGIN
+          <button onClick={handleSubmit} className="w-full bg-[#1F2B44] text-white py-3 rounded-xl font-medium hover:opacity-90 transition">
+            {loading ? 'Signing in...' : 'LOGIN'}
           </button>
 
           {/* Divider */}
