@@ -1,7 +1,7 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook } from "react-icons/fa";
-import bg2 from "../assets/bg2.png";
+import bg from "../assets/SignIn_bg.png";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
 import { signin } from "../API.js";
@@ -45,7 +45,7 @@ const SignIn = () => {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg2})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       {/* Top Navigation */}
       <div className="flex justify-between items-center px-6 md:px-10 py-6">
         <div className="flex items-center gap-3">
