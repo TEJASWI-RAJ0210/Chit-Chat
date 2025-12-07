@@ -1,5 +1,5 @@
 import React from "react";
-import SignUp from "./mainComponents/signUp.jsx";
+import SignUp from "./mainComponents/SignUp.jsx";
 import {BrowserRouter,Routes,Route} from "react-router-dom"
 import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
@@ -11,6 +11,7 @@ const App=()=>{
     <Route path="/" element={<SignUp />}/>
     <Route path="/UserName" element={<UserName/>}/> 
     <Route path="/SignIn" element={<SignIn/>}/>
+    <Route path="/UserName" element={<UserName/>}/>
     </Routes>
     </BrowserRouter>
   );

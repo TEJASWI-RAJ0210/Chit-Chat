@@ -1,7 +1,7 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple, FaFacebook } from "react-icons/fa";
-import Bg from "../assets/Bg.png";
+import bg from "../assets/SignUp_bg.png";
 import { useNavigate } from "react-router-dom";
 import SignIn from "./SignIn.jsx";
 import { useState } from "react";
@@ -50,7 +50,7 @@ const SignUp = () => {
     <div
       className="min-h-screen w-full flex flex-col items-center justify-center relative px-4"
       style={{
-        backgroundImage: `url(${Bg})`,
+        backgroundImage: `url(${bg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
