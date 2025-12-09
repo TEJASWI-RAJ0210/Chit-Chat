@@ -1,9 +1,83 @@
 import React, { useState } from "react";
 import bg from "../assets/Username_bg.png";
+import { useNavigate } from "react-router-dom";
 
 const UserName = () => {
-  const [username, setUsername] = useState("alex12");
-  const suggestedUsernames = ["alex_123", "alex.smith", "alex_s"];
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [available, setAvailable] = useState(null);
+  const debounceTimer = React.useRef(null);
+
+  const generateRandomUsername = () => {
+    const adjectives = ["cool", "fast", "happy", "smart", "lucky", "brave", "funny", "wild", "quiet", "bright"];
+    const animals = ["lion", "tiger", "bear", "wolf", "fox", "eagle", "owl", "shark", "panda", "koala"];
+    const number = Math.floor(Math.random() * 1000);
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const animal = animals[Math.floor(Math.random() * animals.length)];
+    return `${adj}_${animal}${number}`;
+  };
+
+  const suggestedUsernames = React.useMemo(() => [
+    generateRandomUsername(),
+    generateRandomUsername(),
+    generateRandomUsername()
+  ], []);
+
+  const checkUsernameAvailability = async (name) => {
+    setLoading(true);
+    setError("");
+    setAvailable(null);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (name.trim() === "") {
+          setError("Username cannot be empty.");
+          setAvailable(false);
+          resolve(false);
+        } else if (name.endsWith("s")) {
+          setError("Username is already taken.");
+          setAvailable(false);
+          resolve(false);
+        } else {
+          setError("");
+          setAvailable(true);
+          resolve(true);
+        }
+        setLoading(false);
+      }, 1000);
+    });
+  };
+
+  const handleChange = (e) => {
+    setUsername(e.target.value);
+    setError("");
+    setAvailable(null);
+    
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    debounceTimer.current = setTimeout(() => {
+      if (e.target.value.trim() !== "") {
+        checkUsernameAvailability(e.target.value);
+      }
+    }, 500);
+  };
+
+  const handleContinue = async () => {
+    setError("");
+    setLoading(true);
+    const isAvailable = await checkUsernameAvailability(username);
+    if (isAvailable) {
+      localStorage.setItem("username", username);
+      alert("Username set successfully!");
+      //navigate("/chat"); 
+    } else {
+      alert("Please choose a different username.");
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="flex h-screen w-full items-center justify-center" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
@@ -34,13 +108,16 @@ const UserName = () => {
               <input
                 type="text"
                 value={username}
+                onChange={handleChange}
                 className="w-64 py-2 px-2 outline-none rounded-r-md text-gray-800 border-black"
+                placeholder="Enter your username"
+                disabled={loading}
               />
             </div>
-            <p className="text-xs text-red-500 mt-1">
-              <span className="text-green-600 text-xs"><u>username is available!</u></span>
-              <span className="text-gray-500 text-sm"> OR </span>
-              <span className="text-red-600 text-xs"> <u> username is already taken.</u></span>
+            <p className="text-xs mt-1">
+              {loading && <span className="text-gray-700">Checking availability...</span>}
+              {!loading && available === true && <span className="text-green-600"><u>Username is available!</u></span>}
+              {!loading && available === false && <span className="text-red-600"><u>{error || "Username is already taken."}</u></span>}
             </p>
           </div>
 
@@ -50,8 +127,14 @@ const UserName = () => {
             {suggestedUsernames.map((name) => (
               <button
                 key={name}
-                onClick={() => setUsername(name)}
+                onClick={async () => {
+                  setUsername(name);
+                  setError("");
+                  setAvailable(null);
+                  await checkUsernameAvailability(name);
+                }}
                 className="px-10 py-1 bg-[#FAF8F580] hover:bg-gray-200 border border-black rounded-full text-sm flex items-center space-x-1"
+                disabled={loading}
               >
                 <span className="text-">@{name}</span>
               </button>
@@ -59,8 +142,12 @@ const UserName = () => {
           </div>
 
           {/* Continue Button */}
-          <button className="mt-8 px-20 py-2 bg-[#1F2B44] hover:bg-[#1F2B55] text-white rounded-md shadow-md">
-            Continue
+          <button
+            className="mt-8 px-20 py-2 bg-[#1F2B44] hover:bg-[#1F2B55] text-white rounded-md shadow-md disabled:opacity-60"
+            onClick={handleContinue}
+            disabled={loading || !username || available === false}
+          >
+            {loading ? "Checking..." : "Continue"}
           </button>
         </div>
         </div>
