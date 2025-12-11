@@ -3,13 +3,23 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"; 
 
 const userSchema = new Schema({
-    username:{
+    fullName:{
         type: String,
         required: true,
-        unique: true,
+        unique: false,
         lowercase: true,
-        trim : true,
+        trim : false,
         index : true
+    },
+     username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 20,
+      index: true,
+      match: /^[a-zA-Z0-9._]+$/,
     },
     email:{
         type: String,
@@ -18,6 +28,24 @@ const userSchema = new Schema({
         lowercase: true,
         trim : true,
     },
+
+    contactNumber:{
+        type: String,
+        required: false,
+        unique: false,
+        default: null,
+    },
+    bio:{
+        type: String,
+        required: false,
+        unique: false,
+        default: null,
+    },
+    profilePic:{
+        type: String,
+        required: false,
+        default: null,
+    },        
     
     password:{
         type: String,

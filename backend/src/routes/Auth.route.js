@@ -61,4 +61,46 @@ router.post('/signin', async (req, res) => {
     }
 });
 
+// Check if username is available
+router.post("/check-username", async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    const user = await User.findOne({ username: username.toLowerCase() });
+
+    if (user) {
+      return res.status(200).json({ available: false, message: "Username already taken" });
+    }
+
+    return res.status(200).json({ available: true, message: "Username is available" });
+  } catch (error) {
+    return res.status(500).json({ available: false, message: "Server error" });
+  }
+});
+
+// Update username (after signup)
+router.post("/set-username", async (req, res) => {
+  const { userId, username } = req.body;
+
+  try {
+    // Check if username already exists
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username is already taken" });
+    }
+
+    // Update username
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { username: username.toLowerCase() },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "Username updated successfully", user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: "Unable to update username", error });
+  }
+});
+
+
 export default router;

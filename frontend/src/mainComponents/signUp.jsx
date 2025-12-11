@@ -10,7 +10,7 @@ import { signup} from "../API.js";
 const SignUp = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: "",
+    fullName: "",
     email: "",
     password: "",
   });
@@ -88,8 +88,8 @@ const SignUp = () => {
             <label className="block text-gray-700 mb-1 text-sm">Name</label>
             <input
               type="text"
-              name="username"
-              value={formData.username}
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
               placeholder="John"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
