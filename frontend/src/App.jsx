@@ -5,6 +5,7 @@ import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponets/Settings.jsx";
 import socket from "./socket/socket.js";
+import Chat from "./mainComponents/Chat.jsx";
 import { useEffect } from "react";
 const App=()=>{
   useEffect(() => {
@@ -25,6 +26,7 @@ const App=()=>{
     <Route path="/SignIn" element={<SignIn/>}/>
     <Route path="/UserName" element={<UserName/>}/>
     <Route path="/Settings" element={<SettingsPage/>}/>
+    <Route path="/Chat" element={<Chat/>}/>
     </Routes>
     </BrowserRouter>
   );
