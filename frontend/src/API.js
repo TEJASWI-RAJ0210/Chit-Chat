@@ -25,7 +25,6 @@ export const signin = async (userData) => {
     throw error.response?.data || { message: 'Network error' };
   }
 };
-
 /* Check username availability */
 export const checkUsernameAvailability = async (username) => {
   try {

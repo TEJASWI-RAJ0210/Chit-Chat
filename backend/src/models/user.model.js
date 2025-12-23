@@ -5,12 +5,21 @@ import jwt from "jsonwebtoken";
 const userSchema = new Schema({
     fullName:{
         type: String,
-        default: null,
-        // required: true,
-        // unique: false,
-        // lowercase: true,
-        // trim : false,
-        // index : true
+        required: false,
+        unique: false,
+        lowercase: true,
+        trim : false,
+        index : true
+    },
+     username: {
+      type: String,
+      required: false,
+      unique: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 20,
+      index: true,
+      match: /^[a-zA-Z0-9._]+$/,
     },
          username: {
             type: String,

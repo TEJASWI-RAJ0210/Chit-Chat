@@ -8,7 +8,7 @@ import socket from "./socket/socket.js";
 import Chat from "./mainComponents/Chat.jsx";
 import { useEffect } from "react";
 const App=()=>{
-  useEffect(() => {
+  /*useEffect(() => {
     socket.connect();          
     console.log("Socket connected");
 
@@ -16,7 +16,7 @@ const App=()=>{
       socket.disconnect();     
       console.log("Socket disconnected");
     };
-  }, []);
+  }, []);8*/
 
   return (
     <BrowserRouter>
@@ -26,7 +26,11 @@ const App=()=>{
     <Route path="/SignIn" element={<SignIn/>}/>
     <Route path="/UserName" element={<UserName/>}/>
     <Route path="/Settings" element={<SettingsPage/>}/>
+<<<<<<< HEAD
     <Route path="/Chat" element={<Chat/>}/>
+=======
+    <Route path="/chat" element={<Chat/>}/>
+>>>>>>> c64afec90fe8b76d0712bcc6cc8b46f7f48fada5
     </Routes>
     </BrowserRouter>
   );

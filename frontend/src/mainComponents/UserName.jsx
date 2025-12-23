@@ -3,7 +3,6 @@ import bg from "../assets/Username_bg.png";
 import { useNavigate } from "react-router-dom";
 import api from "../API.js";
 
-
 const UserName = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
@@ -141,7 +140,9 @@ const handleContinue = async () => {
           </div>
 
           {/* Continue Button */}
+          
           <button
+         
             className="mt-8 px-20 py-2 bg-[#1F2B44] hover:bg-[#1F2B55] text-white rounded-md shadow-md disabled:opacity-60"
             onClick={handleContinue}
             disabled={loading || !username || available === false}

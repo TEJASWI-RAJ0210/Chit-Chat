@@ -39,7 +39,7 @@ const SignIn = () => {
         // ✅ If username exists → go to chat
         // ❌ If not → go to username page
         if (res.data.user.username) {
-          navigate("/Settings");
+          navigate("/chat");
         } else {
           navigate("/UserName");
         }
@@ -51,7 +51,7 @@ const SignIn = () => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
