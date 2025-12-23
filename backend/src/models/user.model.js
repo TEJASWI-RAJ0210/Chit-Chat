@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 const userSchema = new Schema({
     fullName:{
         type: String,
+<<<<<<< HEAD
         required: false,
         unique: false,
         lowercase: true,
@@ -20,7 +21,26 @@ const userSchema = new Schema({
       maxlength: 20,
       index: true,
       match: /^[a-zA-Z0-9._]+$/,
+=======
+        default: null,
+        // required: true,
+        // unique: false,
+        // lowercase: true,
+        // trim : false,
+        // index : true
+>>>>>>> fa5bb9c7acad06cd410771d8875fa6fbd1dec839
     },
+         username: {
+            type: String,
+            required: false,
+            unique: true,
+            //sparse: true,
+            trim: true,
+            minlength: 3,
+            maxlength: 20,
+            index: true,
+            match: /^[a-zA-Z0-9._]+$/,
+        },
     email:{
         type: String,
         required: true,
@@ -95,6 +115,30 @@ userSchema.methods.generateRefreshToken = function(){
     )
 }
 
+// const User = mongoose.model("User", userSchema);
+// // Ensure a sparse unique index on `username` so multiple null/undefined values are allowed
+// userSchema.index({ username: 1 }, { unique: true, sparse: true });
+
+// // After model is compiled, attempt to drop any old non-sparse username index and create the new one
+// mongoose.connection.once('open', async () => {
+//     try {
+//         // Drop existing index if it exists (the old index name is typically 'username_1')
+//         await User.collection.dropIndex('username_1');
+//     } catch (err) {
+//         // Ignore index-not-found errors
+//         if (err && err.codeName !== 'IndexNotFound' && !(err.message && err.message.toLowerCase().includes('index not found'))) {
+//             console.error('Error dropping old username index:', err);
+//         }
+//     }
+
+//     try {
+//         await User.collection.createIndex({ username: 1 }, { unique: true, sparse: true });
+//     } catch (err) {
+//         console.error('Error creating sparse unique username index:', err);
+//     }
+// });
+
 const User = mongoose.model("User", userSchema);
+
 export default User;
 
