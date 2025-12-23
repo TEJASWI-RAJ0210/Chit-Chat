@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import bg from "../assets/Username_bg.png";
 import { useNavigate } from "react-router-dom";
+import api from "../API.js";
 
 const UserName = () => {
   const navigate = useNavigate();
@@ -26,57 +27,54 @@ const UserName = () => {
   ], []);
 
   const checkUsernameAvailability = async (name) => {
-    setLoading(true);
-    setError("");
-    setAvailable(null);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        if (name.trim() === "") {
-          setError("Username cannot be empty.");
-          setAvailable(false);
-          resolve(false);
-        } else if (name.endsWith("s")) {
-          setError("Username is already taken.");
-          setAvailable(false);
-          resolve(false);
-        } else {
-          setError("");
-          setAvailable(true);
-          resolve(true);
-        }
-        setLoading(false);
-      }, 1000);
-    });
+    if (!name.trim()) return;
+
+    try {
+      setLoading(true);
+      const res = await api.post("/auth/check-username", { username: name });
+      setAvailable(res.data.available);
+      setError(res.data.available ? "" : "Username already taken");
+    } catch {
+      setAvailable(false);
+      setError("Error checking username");
+    } finally {
+      setLoading(false);
+    }
   };
 
+
   const handleChange = (e) => {
-    setUsername(e.target.value);
-    setError("");
+    const value = e.target.value.toLowerCase();
+    setUsername(value);
     setAvailable(null);
-    
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-    
+    setError("");
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
     debounceTimer.current = setTimeout(() => {
-      if (e.target.value.trim() !== "") {
-        checkUsernameAvailability(e.target.value);
-      }
+      checkUsernameAvailability(value);
     }, 500);
   };
 
-  const handleContinue = async () => {
-    setError("");
-    setLoading(true);
-    const isAvailable = await checkUsernameAvailability(username);
-    if (isAvailable) {
+
+const handleContinue = async () => {
+    if (!available) return;
+    const userId = localStorage.getItem("userId");
+
+    try {
+      setLoading(true);
+      await api.post("/auth/set-username", {
+        userId,
+        username,
+      });
+
       localStorage.setItem("username", username);
-      alert("Username set successfully!");
-      //navigate("/chat"); 
-    } else {
-      alert("Please choose a different username.");
+      navigate("/Settings");
+    } catch (err) {
+      setError("Failed to set username", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -142,7 +140,9 @@ const UserName = () => {
           </div>
 
           {/* Continue Button */}
+          
           <button
+         
             className="mt-8 px-20 py-2 bg-[#1F2B44] hover:bg-[#1F2B55] text-white rounded-md shadow-md disabled:opacity-60"
             onClick={handleContinue}
             disabled={loading || !username || available === false}

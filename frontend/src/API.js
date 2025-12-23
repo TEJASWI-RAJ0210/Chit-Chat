@@ -25,3 +25,38 @@ export const signin = async (userData) => {
     throw error.response?.data || { message: 'Network error' };
   }
 };
+/* Check username availability */
+export const checkUsernameAvailability = async (username) => {
+  try {
+    return await api.post("/auth/check-username", { username });
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Username check failed"
+    );
+  }
+};
+
+/* Set username */
+export const setUsername = async (userId, username) => {
+  try {
+    return await api.post("/auth/set-username", {
+      userId,
+      username,
+    });
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Set username failed"
+    );
+  }
+};
+
+// Automatically attach token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default api;

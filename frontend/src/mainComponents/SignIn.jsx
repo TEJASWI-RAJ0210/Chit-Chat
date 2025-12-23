@@ -28,21 +28,30 @@ const SignIn = () => {
     setLoading(true);
     try {
       const res = await signin(formData);
-      if (res?.status === 200 || res?.status === 201) {
+       if (res.status === 200) {
+        // ✅ STORE ALL REQUIRED DATA
         localStorage.setItem("token", res.data.token);
+        localStorage.setItem("userId", res.data.user._id);
+        localStorage.setItem("username", res.data.user.username || "");
+
         alert("Sign In Successful");
-        navigate("/UserName");
-      } else {
-        throw new Error(res?.data?.message || 'Sign in failed');
+
+        // ✅ If username exists → go to chat
+        // ❌ If not → go to username page
+        if (res.data.user.username) {
+          navigate("/chat");
+        } else {
+          navigate("/UserName");
+        }
       }
     } catch (error) {
-      console.error('SignIn error:', error);
-      setError(error.message || 'Sign In failed');
-      alert("Sign In Failed. Please check your credentials. " + (error.message || ''));
+      console.error("SignIn error:", error);
+      setError(error.response?.data?.message || "Sign In failed");
+      alert("Sign In Failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col relative" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>

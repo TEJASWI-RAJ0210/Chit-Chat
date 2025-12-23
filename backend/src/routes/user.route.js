@@ -10,37 +10,47 @@ router.get("/:userId", async (req, res) => {
       "fullName email username contactNumber bio profilePic"
     );
 
-    res.status(200).json(user);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send safe values even if fields are missing
+    res.status(200).json({
+      fullName: user.fullName || "",
+      email: user.email || "",
+      username: user.username || "",
+      contactNumber: user.contactNumber || "",
+      bio: user.bio || "",
+      profilePic: user.profilePic || "",
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching user data" });
+    res.status(500).json({ message: "Error fetching user profile" });
   }
 });
+
 
 
 // Update user profile route
 router.put("/update/:userId", async (req, res) => {
   try {
-    const { fullName, email, contact, bio } = req.body;
+    const { fullName, email, contactNumber, bio } = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.params.userId,
       {
-        fullName,
-        email,
-        contactNumber,
-        bio,
+        fullName: fullName || "",
+        email: email || "",
+        contactNumber: contactNumber || "",
+        bio: bio || "",
       },
       { new: true }
-    ).select("fullName email username contact bio");
+    ).select("fullName email username contactNumber bio profilePic");
 
-    res.status(200).json({
-      message: "Profile updated successfully",
-      user: updatedUser,
-    });
-
+    res.status(200).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: "Error updating profile", error });
+    res.status(500).json({ message: "Error updating profile" });
   }
 });
+
 
 export default router;

@@ -30,17 +30,19 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      const response = await signup(formData);
-      console.log("Signup successful:", response);
-      alert("Sign Up Successful");
-      // Redirect or show success message
-      if (response.status === 201) {
+      const res = await signup(formData);
+
+      if (res.status === 201) {
+        // ✅ SAVE userId for username page
+        localStorage.setItem("userId", res.data.userId);
+
+        alert("Sign Up Successful");
         navigate("/UserName");
       }
     } catch (error) {
       console.error("Signup error:", error);
-      setError(error.message || "Signup failed");
-      alert("Sign Up Failed. Please try again." + error.message);
+      setError(error.response?.data?.message || "Signup failed");
+      alert("Sign Up Failed. Please try again.");
     } finally {
       setLoading(false);
     }
