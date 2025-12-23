@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
+import api from "../API.js";
 import {
   FiHome,
   FiGrid,
@@ -9,6 +10,62 @@ import {
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState("account");
+  const userId = localStorage.getItem("userId");
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    username: "",
+    contactNumber: "",
+    bio: "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUser = async () => {
+      try {
+        const res = await api.get(`/user/${userId}`);
+
+        setFormData({
+          fullName: res.data.fullName || "",
+          email: res.data.email || "",
+          username: res.data.username || "",
+          contactNumber: res.data.contactNumber || "",
+          bio: res.data.bio || "",
+        });
+      } catch (error) {
+        console.error("Failed to fetch settings data", error.response?.data);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [userId]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSave = async () => {
+    try {
+      await api.put(`/user/update/${userId}`, {
+        fullName: formData.fullName,
+        email: formData.email,
+        contactNumber: formData.contactNumber,
+        bio: formData.bio,
+      });
+
+      alert("Profile updated successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to update profile");
+    }
+  };
+  if (loading) return <p>Loading settings...</p>;
+
 
   return (
     <div className="flex bg-gradient-to-br from-[#ffd0aa] to-[#f3a57c] min-h-screen font-sans">
@@ -76,6 +133,9 @@ const SettingsPage = () => {
             <div className="flex flex-col flex-1">
               <label className="font-medium mb-1 text-[#4C535F] text-Manrope">Full name</label>
               <input
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
                 className="p-3 border border-gray-300 rounded-lg text-Manrope"
                 placeholder="Please enter your full name"
               />
@@ -85,6 +145,9 @@ const SettingsPage = () => {
             <div className="flex flex-col flex-1">
               <label className="font-medium mb-1 text-[#4C535F] text-Manrope">Email</label>
               <input
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 type="email"
                 className="p-3 border border-gray-300 rounded-lg text-Manrope"
                 placeholder="Please enter your email"
@@ -98,6 +161,9 @@ const SettingsPage = () => {
             <div className="flex flex-col flex-1">
               <label className="font-medium mb-1 text-[#4C535F] text-Manrope">Username</label>
               <input
+                name="username"
+                value={formData.username}
+                disabled
                 className="p-3 border border-gray-300 rounded-lg text-Manrope"
                 placeholder="Please enter your username"
               />
@@ -109,6 +175,9 @@ const SettingsPage = () => {
               <div className="flex items-center border border-gray-300 rounded-lg bg-white px-3 text-Manrope">
                 <span className="text-gray-700 text-Manrope">+1</span>
                 <input
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
                   className="flex-1 p-3 border-none outline-none text-Manrope"
                   placeholder="Please enter your phone number"
                 />
@@ -120,6 +189,9 @@ const SettingsPage = () => {
           <div className="flex flex-col">
             <label className="font-medium mb-1 text-[#4C535F] text-Manrope">Bio</label>
             <textarea
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
               className="p-3 border border-gray-300 rounded-lg h-32 resize-none text-Manrope"
               placeholder="Write your Bio here e.g your hobbies, interests ETC"
             ></textarea>
@@ -128,6 +200,7 @@ const SettingsPage = () => {
           {/* Buttons */}
           <div className="flex gap-6">
             <button
+              onClick={handleSave}
               type="submit"
               className="w-[201px] h-[49px] bg-[#00B78D] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#009f7b] text-Manrope"
             >
