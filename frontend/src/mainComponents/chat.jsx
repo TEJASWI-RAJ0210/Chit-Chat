@@ -1,3 +1,5 @@
+
+
 import React from "react";
 import { useState,} from "react";
 import ChatList from "../chatComponents/chatList.jsx";
@@ -6,6 +8,7 @@ import MessageList from "../chatComponents/messageList.jsx";
 import MessageBubble from "../chatComponents/messageBubble.jsx";
 import MessageInput from "../chatComponents/messageInput.jsx";
 import SearchFriend from "../chatComponents/searchFriend.jsx";
+import ChatAi from "../chatComponents/chatAi.jsx";
 const Chat = () => {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
@@ -25,5 +28,4 @@ const Chat = () => {
     </div>
   );
 };
-
 export default Chat;
