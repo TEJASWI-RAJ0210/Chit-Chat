@@ -1,10 +1,11 @@
 import React from "react";
-const MessageList=()=>{
-    return(
-        <div>
-            <h1 className="text-2xl font-bold bg-blue-500 text-white p-4 rounded-lg">
-                Message List Component
-            </h1>
+import MessageBubble from "./messageBubble.jsx";
+const MessageList=({messages})=>{
+    return (
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {messages.map((message, index) => (
+                <MessageBubble key={index} message={message} />
+            ))}
         </div>
     );
 }
