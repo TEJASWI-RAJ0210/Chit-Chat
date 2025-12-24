@@ -9,43 +9,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Signup Route
 router.post('/signup', async (req, res) => {
     try {
-<<<<<<< HEAD
-        const { username, fullName, email, password } = req.body;
-        // normalize email for lookup
-        const normalizedEmail = email ? email.toLowerCase() : email;
-
-        // build check query: only include username check when provided
-        const orConditions = [{ email: normalizedEmail }];
-        if (username) orConditions.push({ username });
-
-        const existingUser = await User.findOne({ $or: orConditions });
-
-        if (existingUser) {
-          return res.status(400).json({ message: 'User with this email or username already exists' });
-        }
-
-        // If no username provided, derive one from the email prefix and ensure uniqueness
-        let finalUsername = username && username.trim() ? username.trim() : null;
-        if (!finalUsername) {
-          const base = (normalizedEmail && normalizedEmail.split('@')[0]) || `user${Date.now().toString().slice(-6)}`;
-          let candidate = base.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
-          let suffix = 0;
-          // ensure uniqueness
-          while (await User.findOne({ username: candidate })) {
-            suffix++;
-            candidate = `${base}${suffix}`.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
-          }
-          finalUsername = candidate;
-        }
-
-        // Let mongoose pre-save hook hash the password once
-        const newUser = await User.create({ 
-          username: finalUsername, 
-          fullName,
-          email: normalizedEmail, 
-          password
-        });
-=======
         const { fullName, username, email, password } = req.body;
         // normalize email for lookup
         const normalizedEmail = email ? email.toLowerCase() : email;
@@ -73,7 +36,6 @@ router.post('/signup', async (req, res) => {
         if (username) {userCreateData.username = username.toLowerCase();}
 
         const newUser = await User.create(userCreateData);
->>>>>>> fa5bb9c7acad06cd410771d8875fa6fbd1dec839
         
         res.status(201).json({ 
             message: 'User created successfully', 
@@ -102,18 +64,6 @@ router.post('/signin', async (req, res) => {
         
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7h' });
         res.status(200).json({ 
-<<<<<<< HEAD
-            message: 'Login successful', 
-            token,
-            userId: user._id,
-            user: {
-              _id: user._id,
-              fullName: user.fullName || null,
-              username: user.username || null,
-              email: user.email || null
-            }
-        });
-=======
           message: 'Login successful', 
           token,
           user: {
@@ -123,7 +73,6 @@ router.post('/signin', async (req, res) => {
             fullName: user.fullName || "",
   }
 });
->>>>>>> fa5bb9c7acad06cd410771d8875fa6fbd1dec839
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Login Failed' });
