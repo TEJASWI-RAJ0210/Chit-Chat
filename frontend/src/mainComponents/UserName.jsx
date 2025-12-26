@@ -53,7 +53,7 @@ const UserName = () => {
 
     debounceTimer.current = setTimeout(() => {
       checkUsernameAvailability(value);
-    }, 500);
+    }, 5000);
   };
 
 

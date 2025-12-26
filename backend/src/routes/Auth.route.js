@@ -9,7 +9,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Signup Route
 router.post('/signup', async (req, res) => {
     try {
-<<<<<<< HEAD
         const { username, fullName, email, password } = req.body;
         // normalize email for lookup
         const normalizedEmail = email ? email.toLowerCase() : email;
@@ -45,35 +44,6 @@ router.post('/signup', async (req, res) => {
           email: normalizedEmail, 
           password
         });
-=======
-        const { fullName, username, email, password } = req.body;
-        // normalize email for lookup
-        const normalizedEmail = email ? email.toLowerCase() : email;
-
-        // Check for existing user by email
-        const existingByEmail = await User.findOne({ email: normalizedEmail });
-        if (existingByEmail) {
-            return res.status(400).json({ message: 'User with this email already exists' });
-        }
-
-        // If username provided, check for username uniqueness
-        if (username) {
-          const existingByUsername = await User.findOne({ username: username.toLowerCase() });
-          if (existingByUsername) {
-            return res.status(400).json({ message: 'User with this username already exists' });
-          }
-        }
-
-        // Let mongoose pre-save hook hash the password once
-        const userCreateData = {
-            fullName,
-            email: normalizedEmail,
-            password
-        };
-        if (username) {userCreateData.username = username.toLowerCase();}
-
-        const newUser = await User.create(userCreateData);
->>>>>>> fa5bb9c7acad06cd410771d8875fa6fbd1dec839
         
         res.status(201).json({ 
             message: 'User created successfully', 
@@ -123,7 +93,7 @@ router.post('/signin', async (req, res) => {
             fullName: user.fullName || "",
   }
 });
->>>>>>> fa5bb9c7acad06cd410771d8875fa6fbd1dec839
+>>>>>>> e84706912b76fb582dccff73ef718d9379f5cca1
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Login Failed' });

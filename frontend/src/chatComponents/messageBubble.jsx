@@ -1,12 +1,13 @@
 import React from "react";
-const MessageBubble=()=>{
-    return(
-        <div>
-            <h1 className="text-2xl font-bold bg-blue-500 text-white p-4 rounded-lg">
-                Message Bubble Component
-            </h1>
+const MessageBubble=({message})=>{
+   const isMe = message.sender === "me";
+   return (
+    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-2` }>
+        <div className ={`max-w-xs px-4 py-2 rounded-lg text-sm ${isMe ? "bg-bubbleMe" : "bg-bubbleOther"}`}>
+            {message.text}
         </div>
-    );  
+    </div>
+   ) 
 
 }
 export default MessageBubble;
