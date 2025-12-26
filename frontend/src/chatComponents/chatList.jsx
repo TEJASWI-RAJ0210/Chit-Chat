@@ -1,4 +1,5 @@
 import React from "react";
+import bg from "../assets/chatlist_bg.png";
 
 const ChatList = ({ chats = [], onSelectChat }) => {
   const items =
@@ -10,7 +11,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
         ];
 
   return (
-    <div className="w-[240px] h-screen bg-cyan-200 border-r border-gray-300 flex flex-col ml-[69px]">
+    <div className="w-[240px] h-full h-screen bg-[#7ED4E6] border-r border-gray-300 flex flex-col ml-[69px]" style={{ backgroundImage: `url(${bg})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: "no-repeat", }}>
       <div className="px-4 py-3 font-[Zen_Kaku_Gothic_Antique] text-sm font-semibold border-b">
         MESSAGES
       </div>
@@ -19,7 +20,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
         <input
           type="text"
           placeholder="Find or start a conversation"
-          className="w-[220px] h-[28px] px-3 text-xs font-[Zen_Kaku_Gothic_Antique] bg-white rounded-[9px] outline-none"
+          className="w-[220px] h-[28px] px-3 text-xs font-[Zen_Kaku_Gothic_Antique] bg-white  outline-none"
         />
       </div>
 
@@ -37,7 +38,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
             />
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-medium">{c.name}</span>
-              <span className="text-xs text-gray-600 truncate">{c.lastMessage}</span>
+              <span className="text-xs text-gray-600 truncate">Listening to music 🎵</span>
             </div>
           </div>
         ))}

@@ -3,6 +3,9 @@ import ChatHeader from "../chatComponents/chatHeader.jsx";
 import MessageList from "../chatComponents/messageList.jsx";
 import MessageInput from "../chatComponents/messageInput.jsx";
 import ChatList from "../chatComponents/chatList.jsx";
+import Sidebar from "../chatComponents/sidebar.jsx";
+import SearchFriend from "../chatComponents/searchFriend.jsx";
+import bg from "../assets/chat_bg.jpeg";
 
 const Chat = () => {
   const [chats, setChats] = useState([
@@ -11,12 +14,14 @@ const Chat = () => {
   ]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
-    if (!activeChat && chats.length > 0) {
+    // only auto-select default chat when search panel is NOT open
+    if (!activeChat && chats.length > 0 && !showSearch) {
       setActiveChat(chats[0]);
     }
-  }, [chats, activeChat]);
+  }, [chats, activeChat, showSearch]);
 
   useEffect(() => {
     if (activeChat) {
@@ -28,12 +33,28 @@ const Chat = () => {
       setMessages([]);
     }
   }, [activeChat]);
+
   return (
     <div className="h-screen flex flex-col">
       <div className="flex flex-1">
-        <ChatList chats={chats} onSelectChat={setActiveChat} />
-        {activeChat && (
-          <div className="flex flex-col flex-1 bg-gray-600">
+        {/* when opening search, also clear activeChat so only sidebar + SearchFriend show */}
+        <Sidebar onOpenSearch={() => { setShowSearch(true); setActiveChat(null); }} />
+
+        {showSearch ? (
+          <SearchFriend />
+        ) : (
+          <ChatList
+            chats={chats}
+            onSelectChat={(c) => {
+              setActiveChat(c);
+              setShowSearch(false);
+            }}
+          />
+        )}
+
+        {/* message area only shows when a chat is active and search is not open */}
+        {!showSearch && activeChat && (
+          <div className="flex flex-col flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }}>
             <ChatHeader chat={activeChat} />
             <MessageList messages={messages} />
             <MessageInput />
@@ -43,4 +64,4 @@ const Chat = () => {
     </div>
   );
 };
-export default Chat;  
+export default Chat;
