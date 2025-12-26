@@ -4,19 +4,19 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponents/Settings.jsx";
-import Chat from "./mainComponents/Chat.jsx";
-// import socket from "./socket/socket.js";
+import Chat from "./mainComponents/chat.jsx";
+//import socket from "./socket/socket.js";
 import { useEffect } from "react";
-const App = () => {
-  /*useEffect(() => {
-    socket.connect();          
-    console.log("Socket connected");
+ const App = () => {
+//   useEffect(() => {
+  //   socket.connect();          
+  //   console.log("Socket connected");
 
-    return () => {
-      socket.disconnect();     
-      console.log("Socket disconnected");
-    };
-  }, []);8*/
+  //   return () => {
+  //     socket.disconnect();     
+  //     console.log("Socket disconnected");
+  //   };
+  // }, []);
 
   return (
     <BrowserRouter>

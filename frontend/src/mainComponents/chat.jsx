@@ -1,18 +1,33 @@
-
-
-import React from "react";
-import { useState,} from "react";
-import ChatList from "../chatComponents/chatList.jsx";
+import React, { useState, useEffect } from "react";
 import ChatHeader from "../chatComponents/chatHeader.jsx";
 import MessageList from "../chatComponents/messageList.jsx";
-import MessageBubble from "../chatComponents/messageBubble.jsx";
 import MessageInput from "../chatComponents/messageInput.jsx";
-import SearchFriend from "../chatComponents/searchFriend.jsx";
-import ChatAi from "../chatComponents/chatAi.jsx";
+import ChatList from "../chatComponents/chatList.jsx";
+
 const Chat = () => {
-  const [chats, setChats] = useState([]);
+  const [chats, setChats] = useState([
+    { id: 1, name: "Alice", lastMessage: "Hey, are you there?" },
+    { id: 2, name: "Bob", lastMessage: "Let's meet tomorrow." },
+  ]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    if (!activeChat && chats.length > 0) {
+      setActiveChat(chats[0]);
+    }
+  }, [chats, activeChat]);
+
+  useEffect(() => {
+    if (activeChat) {
+      setMessages([
+        { id: 1, sender: activeChat.name, text: activeChat.lastMessage },
+        { id: 2, sender: "me", text: "OK, sounds good." },
+      ]);
+    } else {
+      setMessages([]);
+    }
+  }, [activeChat]);
   return (
     <div className="h-screen flex flex-col">
       <div className="flex flex-1">
@@ -28,4 +43,4 @@ const Chat = () => {
     </div>
   );
 };
-export default Chat;
+export default Chat;  
