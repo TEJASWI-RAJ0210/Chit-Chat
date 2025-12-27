@@ -6,6 +6,9 @@ import { useNavigate } from "react-router-dom";
 import SignIn from "./SignIn.jsx";
 import { useState } from "react";
 import { signup} from "../API.js";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+
+
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -16,6 +19,7 @@ const SignUp = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -62,26 +66,27 @@ const SignUp = () => {
       <button
         type="button"
         onClick={() => navigate("/SignIn")}
-        className="absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base hover:bg-black hover:text-white transition-all w-[136px] h-[48]"
+        className="backdrop-blur-xl bg-white/60 border border-gray-800 text-gray-800 px-5 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition absolute top-6 bg-[#FAF8F54D] right-10 border-[1.5px] border-[#1F2B44] px-5 py-2 rounded-md text-base transition-all w-[136px] h-[48]"
       >
         SIGN IN
       </button>
 
       {/* Logo */}
       <div className="absolute top-8 left-10 flex items-center space-x-2">
-        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-bold text-base">
-          CC
-        </div>
-        <span className="text-lg font-medium text-gray-800">Chit-Chat</span>
+        <div className="bg-black text-white rounded-full w-10 h-10 flex items-center justify-center font-semibold text-sm">
+            Logo
+          </div>
+         <h1 className="text-lg font-medium text-gray-800 tracking-wide">CHIT-CHAT</h1>
       </div>
 
       {/* Card */}
-      <div className="bg-[#FAF8F5]/90 border-1px border-[#E0E0E0] p-10 rounded-[20px] shadow-md w-full max-w-[572px] h-[588px] text-center flex flex-col">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-2">
+     <div className="flex justify-center rounded-xl">
+        <div className="bg-[#FAF8F5] backdrop-blur-xl bg-white/50 shadow-md rounded-xl px-20 py-12">
+          <h2 className="text-center text-2xl md:text-3xl font-bold text-gray-800 font-[Zen Kaku Gothic Antique]">
           Sign up to Chit-Chat
-        </h1>
+        </h2>
         <p className="text-[#757575] mb-8 text-sm">
-          Add app desc here tejaswi and family
+         
         </p>
 
         {/* Input Fields */}
@@ -112,23 +117,26 @@ const SignUp = () => {
             />
           </div>
 
-          <div>
-            <label className="block text-gray-700 mb-1 text-sm">Password</label>
+         <div className="mb-2">
+            <label className="block text-xs text-gray-600 mb-1">Password</label>
             <div className="relative">
               <input
-                type="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="**********"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                type={showPassword ? "text" : "password"}
+                placeholder="*****"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 cursor-pointer">
-                👁️
+              <span className="absolute right-3 top-2.5 text-gray-400 cursor-pointer select-none" onClick={() => setShowPassword(prev => !prev)}>
+                {showPassword ? (
+                  <FaEyeSlash size={20} className="text-black hover:text-gray-500 cursor-pointer" />
+                ) : (
+                  <FaEye size={20} className="text-black hover:text-gray-500 cursor-pointer" />
+                )}
               </span>
             </div>
           </div>
-        </div>
 
         {/* Checkbox */}
         <div className="flex items-start mb-6 text-left">
@@ -173,9 +181,11 @@ const SignUp = () => {
       </div>
 
       {/* Footer */}
-      <p className="absolute bottom-4 text-[#616161] text-xs text-center w-full">
+     <p className="text-center text-xs text-gray-500 mt-10">
         © 2025 All Rights Reserved, Chit-Chat
       </p>
+    </div>
+    </div>
     </div>
   );
 };
