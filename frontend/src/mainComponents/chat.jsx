@@ -6,63 +6,102 @@ import ChatList from "../chatComponents/chatList.jsx";
 import Sidebar from "../chatComponents/sidebar.jsx";
 import SearchFriend from "../chatComponents/searchFriend.jsx";
 import bg from "../assets/chat_bg.jpeg";
+import socket from "../socket/socket.js";
 
-const Chat = () => {
-  const [chats, setChats] = useState([
-    { id: 1, name: "Alice", lastMessage: "Hey, are you there?" },
-    { id: 2, name: "Bob", lastMessage: "Let's meet tomorrow." },
-  ]);
-  const [activeChat, setActiveChat] = useState(null);
+const Chat = ({ currentUser }) => {
   const [messages, setMessages] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
-  const myUserId = localStorage.getItem("userId");
+  const [chats, setChats] = useState([]);
 
   useEffect(() => {
-    // only auto-select default chat when search panel is NOT open
-    if (!activeChat && chats.length > 0 && !showSearch) {
-      setActiveChat(chats[0]);
-    }
-  }, [chats, activeChat, showSearch]);
+    const handleReceiveMessage = (message) => {
+      // Accept several possible field names from server/client
+      const senderId = message.senderId || message.senderID || message.sender;
+      const receiverId = message.receiverId || message.receiverID || message.receiver;
 
-  useEffect(() => {
-    if (activeChat) {
-      setMessages([
-        { id: 1, sender: activeChat.name, text: activeChat.lastMessage },
-        { id: 2, sender: "me", text: "OK, sounds good." },
-      ]);
-    } else {
-      setMessages([]);
-    }
+      if (senderId === activeChat?._id || receiverId === activeChat?._id) {
+        setMessages((prev) => [...prev, message]);
+      }
+    };
+
+    socket.on("receiveMessage", handleReceiveMessage);
+
+    return () => {
+      socket.off("receiveMessage", handleReceiveMessage);
+    };
   }, [activeChat]);
+
+  const handleSendMessage = (text) => {
+    if (!text.trim() || !activeChat) return;
+
+    const messageData = {
+      chatID: activeChat._id,
+      senderID: currentUser._id,
+      receiverId: activeChat._id,
+      text,
+      createdAt: new Date(),
+    };
+
+    // Join the chat room (so server emits to the right room)
+    socket.emit("joinChat", activeChat._id);
+
+    // Emit fields expected by backend socket handler
+    socket.emit("sendMessage", {
+      chatID: messageData.chatID,
+      senderID: messageData.senderID,
+      text: messageData.text,
+    });
+
+    // Optimistically append message locally
+    setMessages((prev) => [...prev, messageData]);
+  };
 
   return (
     <div className="h-screen flex flex-col">
       <div className="flex flex-1">
-        {/* when opening search, also clear activeChat so only sidebar + SearchFriend show */}
-        <Sidebar onOpenSearch={() => { setShowSearch(true); setActiveChat(null); }} />
+        <Sidebar
+          onOpenSearch={() => {
+            setShowSearch(true);
+            setActiveChat(null);
+          }}
+        />
 
         {showSearch ? (
-          <SearchFriend className=" bg-rose-500"/>
+          <SearchFriend />
         ) : (
           <ChatList
             chats={chats}
-            onSelectChat={(c) => {
-              setActiveChat(c);
+            onSelectChat={(chat) => {
+              setActiveChat(chat);
               setShowSearch(false);
+              setMessages([]); // optional: reset messages on chat switch
             }}
           />
         )}
 
-        {/* message area only shows when a chat is active and search is not open */}
-        {!showSearch && activeChat && (
-          <div className="flex flex-col flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }}>
-            <ChatHeader chat={activeChat} myUserId={myUserId} />
-            <MessageList messages={messages} />
-            <MessageInput />
-          </div>
+        {!showSearch && (
+          (activeChat && (
+            <div
+              className="flex flex-col flex-1 bg-cover bg-center"
+              style={{ backgroundImage: `url(${bg})` }}
+            >
+              <ChatHeader chat={activeChat} myUserId={currentUser?._id} />
+              <MessageList messages={messages} myUserId={currentUser?._id} />
+              <MessageInput onSendMessage={handleSendMessage} />
+            </div>
+          )) || (
+            <div className="flex-1 flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }}>
+              <div className="bg-white/80 p-6 rounded-md text-center">
+                <h2 className="text-lg font-semibold mb-2">No conversation selected</h2>
+                <p className="text-sm text-gray-600">Select a chat from the left or start a new conversation.</p>
+              </div>
+            </div>
+          )
         )}
       </div>
     </div>
   );
 };
+
 export default Chat;

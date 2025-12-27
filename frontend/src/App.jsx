@@ -6,18 +6,18 @@ import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponents/Settings.jsx";
 import Chat from "./mainComponents/chat.jsx";
 
-//import socket from "./socket/socket.js";
+import socket from "./socket/socket.js";
 import { useEffect } from "react";
  const App = () => {
-//   useEffect(() => {
-  //   socket.connect();          
-  //   console.log("Socket connected");
+  useEffect(() => {
+    socket.connect();          
+    console.log("Socket connected");
 
-  //   return () => {
-  //     socket.disconnect();     
-  //     console.log("Socket disconnected");
-  //   };
-  // }, []);
+    return () => {
+      socket.disconnect();     
+      console.log("Socket disconnected");
+    };
+  }, []);
 
   return (
     <BrowserRouter>
