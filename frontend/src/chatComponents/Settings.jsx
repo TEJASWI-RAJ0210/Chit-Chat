@@ -1,4 +1,5 @@
 import React, { useState,useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../API.js";
 import {
   FiHome,
@@ -21,6 +22,8 @@ const SettingsPage = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+  
   useEffect(() => {
     if (!userId) return;
 
@@ -76,7 +79,7 @@ const SettingsPage = () => {
           Logo
         </div>
 
-        <FiHome size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" />
+        <FiHome size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" onClick={() => navigate('/chat')}/>
         <FiGrid size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" />
         <FiBarChart2 size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" />
         <FiBook size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" />
