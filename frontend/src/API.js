@@ -101,6 +101,38 @@ export const getFriendRequests = async () => {
   }
 };
 
+export const getChats = async () => {
+  try {
+    return await api.get('/chat');
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'failed to fetch chats');
+  }
+}
+
+export const createChat = async (friendId) => {
+  try {
+    return await api.post('/chat', { friendId });
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'failed to create chat');
+  }
+}
+
+export const getMessages = async (chatId) => {
+  try {
+    return await api.get(`/messages/${chatId}`);
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'failed to fetch messages');
+  } 
+}
+
+export const sendMessage = async (chatId, content) => {
+  try {
+    return await api.post('/messages', { chatId, content });
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'failed to send message');
+  }
+}
+
 // Automatically attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
