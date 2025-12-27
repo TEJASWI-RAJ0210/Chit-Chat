@@ -20,7 +20,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
         <input
           type="text"
           placeholder="Find or start a conversation"
-          className="w-[220px] h-[28px] px-3 text-xs font-[Zen_Kaku_Gothic_Antique] bg-white rounded-[9px] outline-none"
+          className="w-[220px] h-[28px] px-3 text-xs font-[Zen_Kaku_Gothic_Antique] bg-white  outline-none"
         />
       </div>
 
@@ -38,7 +38,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
             />
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-medium">{c.name}</span>
-              <span className="text-xs text-gray-600 truncate">{c.lastMessage}</span>
+              <span className="text-xs text-gray-600 truncate">Listening to music 🎵</span>
             </div>
           </div>
         ))}

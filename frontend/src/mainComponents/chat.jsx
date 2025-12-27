@@ -15,6 +15,7 @@ const Chat = () => {
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [showSearch, setShowSearch] = useState(false);
+  const myUserId = localStorage.getItem("userId");
 
   useEffect(() => {
     // only auto-select default chat when search panel is NOT open
@@ -55,7 +56,7 @@ const Chat = () => {
         {/* message area only shows when a chat is active and search is not open */}
         {!showSearch && activeChat && (
           <div className="flex flex-col flex-1 bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }}>
-            <ChatHeader chat={activeChat} />
+            <ChatHeader chat={activeChat} myUserId={myUserId} />
             <MessageList messages={messages} />
             <MessageInput />
           </div>
