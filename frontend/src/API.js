@@ -50,6 +50,49 @@ export const setUsername = async (userId, username) => {
   }
 };
 
+//friend apis
+export const searchUser = async (username) => {
+  try {
+    return await api.get(`/friends/search/${username}`);
+  }
+  catch (error){
+    throw new Error(
+      error.response?.data?.message || "failed to search"
+    );
+  }
+
+};
+
+export const sendFriendRequest = async (receiverId) => {
+  try {
+    return await api.post(`/friends/request/${receiverId}`);
+  }catch (error){
+    throw new Error(
+      error.response?.data?.message || "failed to send request"
+    );
+  }
+};
+
+export const acceptFriendRequest = async (senderId) => {
+  try {
+    return await api.post(`/friends/accept/${senderId}`);
+  }catch (error){
+    throw new Error(
+      error.response?.data?.message || "failed to accept request"
+    );
+  }
+};
+
+export const rejectFriendRequest = async (senderId) => {
+  try {
+    return await api.post(`/friends/reject/${senderId}`);
+  }catch (error){
+    throw new Error(
+      error.response?.data?.message || "failed to reject request"
+    );
+  }
+};
+
 // Automatically attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
