@@ -41,7 +41,7 @@ const Chat = () => {
         <Sidebar onOpenSearch={() => { setShowSearch(true); setActiveChat(null); }} />
 
         {showSearch ? (
-          <SearchFriend />
+          <SearchFriend className=" bg-rose-500"/>
         ) : (
           <ChatList
             chats={chats}
