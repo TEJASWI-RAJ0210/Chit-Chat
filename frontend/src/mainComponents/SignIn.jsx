@@ -1,6 +1,8 @@
 import React from "react";
 import { FcGoogle } from "react-icons/fc";
+import { FaEye } from "react-icons/fa";
 import { FaApple, FaFacebook } from "react-icons/fa";
+import { FaEyeSlash } from "react-icons/fa6";
 import bg from "../assets/SignIn_bg.png";
 import {useState} from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +17,7 @@ const SignIn = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -76,7 +79,7 @@ const SignIn = () => {
           <h2 className="text-center text-2xl md:text-3xl font-bold text-gray-800 font-[Zen Kaku Gothic Antique]">
             Log in to Chit-Chat
           </h2>
-          <p className="text-center text-gray-500 text-sm mt-1 mb-6">add desc</p>
+          <p className="text-center text-gray-500 text-sm mt-1 mb-6">WELCOME</p>
 
           {/* Email Input */}
           <div className="mb-4">
@@ -101,13 +104,16 @@ const SignIn = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="***********"
                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-orange-400"
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 cursor-pointer select-none">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" width="16" height="16">
-                <path d="M288 80C222.8 80 169.2 109.6 128.1 147.7 89.6 183.5 63 226 49.4 256 63 286 89.6 328.5 128.1 364.3 169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256 513 226 486.4 183.5 447.9 147.7 406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1 3.3 7.9 3.3 16.7 0 24.6-14.9 35.7-46.2 87.7-93 131.1-47.1 43.7-111.8 80.6-192.6 80.6S142.5 443.2 95.4 399.4c-46.8-43.5-78.1-95.4-93-131.1-3.3-7.9-3.3-16.7 0-24.6 14.9-35.7 46.2-87.7 93-131.1zM288 336c44.2 0 80-35.8 80-80 0-29.6-16.1-55.5-40-69.3-1.4 59.7-49.6 107.9-109.3 109.3 13.8 23.9 39.7 40 69.3 40zm-79.6-88.4c2.5 .3 5 .4 7.6 .4 35.3 0 64-28.7 64-64 0-2.6-.2-5.1-.4-7.6-37.4 3.9-67.2 33.7-71.1 71.1zm45.6-115c10.8-3 22.2-4.5 33.9-4.5 8.8 0 17.5 .9 25.8 2.6 .3 .1 .5 .1 .8 .2 57.9 12.2 101.4 63.7 101.4 125.2 0 70.7-57.3 128-128 128-61.6 0-113-43.5-125.2-101.4-1.8-8.6-2.8-17.5-2.8-26.6 0-11 1.4-21.8 4-32 .2-.7 .3-1.3 .5-1.9 11.9-43.4 46.1-77.6 89.5-89.5z"/></svg>
+              <span className="absolute right-3 top-2.5 text-gray-400 cursor-pointer select-none" onClick={() => setShowPassword(prev => !prev)}>
+                {showPassword ? (
+                  <FaEyeSlash size={20} className="text-black hover:text-gray-500 cursor-pointer" />
+                ) : (
+                  <FaEye size={20} className="text-black hover:text-gray-500 cursor-pointer" />
+                )}
               </span>
             </div>
           </div>
