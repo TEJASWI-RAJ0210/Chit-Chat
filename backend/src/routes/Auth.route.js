@@ -72,18 +72,6 @@ router.post('/signin', async (req, res) => {
         
         const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '7h' });
         res.status(200).json({ 
-<<<<<<< HEAD
-            message: 'Login successful', 
-            token,
-            userId: user._id,
-            user: {
-              _id: user._id,
-              fullName: user.fullName || null,
-              username: user.username || null,
-              email: user.email || null
-            }
-        });
-=======
           message: 'Login successful', 
           token,
           user: {
@@ -93,7 +81,6 @@ router.post('/signin', async (req, res) => {
             fullName: user.fullName || "",
   }
 });
->>>>>>> e84706912b76fb582dccff73ef718d9379f5cca1
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Login Failed' });
