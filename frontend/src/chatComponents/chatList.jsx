@@ -1,4 +1,5 @@
 import React from "react";
+import bg from "../assets/chatList_bg.jpeg";
 
 const ChatList = ({ chats = [], onSelectChat }) => {
   const items =
@@ -10,7 +11,7 @@ const ChatList = ({ chats = [], onSelectChat }) => {
         ];
 
   return (
-    <div className="w-[240px] h-screen bg-cyan-200 border-r border-gray-300 flex flex-col ml-[69px]">
+    <div className="w-[240px] h-screen bg-cover bg-center border-r border-gray-300 flex flex-col" style={{ backgroundImage: `url(${bg})` }}  >
       <div className="px-4 py-3 font-[Zen_Kaku_Gothic_Antique] text-sm font-semibold border-b">
         MESSAGES
       </div>
