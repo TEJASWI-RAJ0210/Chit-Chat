@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import User from '../models/user.model.js';
 import Chat from '../models/chat.model.js';
-import { protect } from '../middleware/auth.middleware.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -35,6 +35,20 @@ router.post("/request/:receiverId",protect, async (req, res) => {
     await sender.save();
 
     res.status(200).json({ message: "Friend request sent" });
+});
+
+// Get incoming friend requests for current user
+router.get('/requests', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId)
+            .populate('friendRequests.received', 'username profilePic');
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json(user.friendRequests.received || []);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 //accept friend request

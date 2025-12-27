@@ -35,6 +35,7 @@ const SignUp = () => {
 
     try {
       const res = await signup(formData);
+      localStorage.setItem("token", res.data.token);
 
       if (res.status === 201) {
         // ✅ SAVE userId for username page

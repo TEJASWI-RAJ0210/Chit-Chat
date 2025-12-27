@@ -93,6 +93,14 @@ export const rejectFriendRequest = async (senderId) => {
   }
 };
 
+export const getFriendRequests = async () => {
+  try {
+    return await api.get('/friends/requests');
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'failed to fetch requests');
+  }
+};
+
 // Automatically attach token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");

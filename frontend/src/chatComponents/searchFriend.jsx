@@ -4,7 +4,8 @@ import {
   rejectFriendRequest,
   acceptFriendRequest,
   sendFriendRequest,
-  searchUser
+  searchUser,
+  getFriendRequests,
 } from "../API.js";
 
 const SearchFriend = () => {
@@ -59,13 +60,8 @@ const SearchFriend = () => {
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const res = await fetch("/api/user/requests", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        });
-        const data = await res.json();
-        setRequests(data || []);
+        const res = await getFriendRequests();
+        setRequests(res.data || []);
       } catch {
         setRequests([]);
       }

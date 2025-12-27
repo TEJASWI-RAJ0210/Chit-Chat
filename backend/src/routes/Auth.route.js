@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -44,10 +45,12 @@ router.post('/signup', async (req, res) => {
           email: normalizedEmail, 
           password
         });
+        const token = jwt.sign({ userId: newUser._id }, JWT_SECRET, { expiresIn: '7h' });
         
         res.status(201).json({ 
             message: 'User created successfully', 
-            userId: newUser._id 
+            userId: newUser._id,
+            token
         });
     } catch (error) {
         console.error('Signup error:', error);
@@ -168,3 +171,26 @@ router.post('/backfill-fullname', async (req, res) => {
     return res.status(500).json({ message: err.message || 'Backfill failed' });
   }
 });
+
+// // Debug: validate token and show decoded payload (tries both secrets)
+// router.get('/validate-token', async (req, res) => {
+//   const auth = req.headers.authorization?.split(' ')[1];
+//   if (!auth) return res.status(400).json({ message: 'No token provided' });
+
+//   const jwt = await import('jsonwebtoken');
+//   const secrets = [process.env.JWT_SECRET, process.env.ACCESS_TOKEN_SECRET];
+//   let decoded = null;
+//   let errors = [];
+
+//   for (const s of secrets) {
+//     if (!s) continue;
+//     try {
+//       decoded = jwt.verify(auth, s);
+//       return res.json({ ok: true, secretUsed: !!s, decoded });
+//     } catch (err) {
+//       errors.push(err.message);
+//     }
+//   }
+
+//   return res.status(401).json({ ok: false, errors });
+// });
