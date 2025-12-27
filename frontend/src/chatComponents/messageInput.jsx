@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { SendHorizontal, SmilePlus, Paperclip } from "lucide-react";
+import socket from "../socket/socket";
+import { sendMessage } from "../API.js";
 
-const MessageInput = ({ onSendMessage }) => {
+const MessageInput = ({ onSendMessage ,chatId}) => {
   const [message, setMessage] = useState("");
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
   };
 
-  const handleSend = (e) => {
+  const handleSend =async (e) => {
     e.preventDefault();
 
     if (!message.trim()) return;
+    const res= await sendMessage(chatId, message);
+    socket.emit("send-message", res.data);
 
     onSendMessage(message); 
     setMessage("");

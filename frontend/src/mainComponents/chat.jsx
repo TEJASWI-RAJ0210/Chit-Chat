@@ -7,59 +7,74 @@ import Sidebar from "../chatComponents/sidebar.jsx";
 import SearchFriend from "../chatComponents/searchFriend.jsx";
 import bg from "../assets/chat_bg.jpeg";
 import socket from "../socket/socket.js";
+import api from "../API.js";
 
-const Chat = ({ currentUser }) => {
-  const [messages, setMessages] = useState([]);
-  const [activeChat, setActiveChat] = useState(null);
-  const [showSearch, setShowSearch] = useState(false);
+
+
+const Chat = () => {
+  const myUserId = localStorage.getItem("userId");
+
   const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [showSearch, setShowSearch] = useState(false);
 
+  /* ---------------- FETCH CHATS ---------------- */
   useEffect(() => {
-    const handleReceiveMessage = (message) => {
-      // Accept several possible field names from server/client
-      const senderId = message.senderId || message.senderID || message.sender;
-      const receiverId = message.receiverId || message.receiverID || message.receiver;
+    if (!myUserId) return;
 
-      if (senderId === activeChat?._id || receiverId === activeChat?._id) {
-        setMessages((prev) => [...prev, message]);
+    const fetchChats = async () => {
+      try {
+        const res = await api.get(`/chat/${myUserId}`);
+        setChats(res.data);
+
+        // auto select first chat
+        if (res.data.length > 0) {
+          setActiveChat(res.data[0]);
+        }
+      } catch (err) {
+        console.error("Failed to load chats", err);
       }
     };
 
-    socket.on("receiveMessage", handleReceiveMessage);
+    fetchChats();
+  }, [myUserId]);
 
-    return () => {
-      socket.off("receiveMessage", handleReceiveMessage);
-    };
-  }, [activeChat]);
+  /* ---------------- FETCH + SOCKET MESSAGES ---------------- */
+useEffect(() => {
+  if (!activeChat) return;
 
-  const handleSendMessage = (text) => {
-    if (!text.trim() || !activeChat) return;
+  // join socket room
+  socket.emit("join-chat", activeChat._id);
 
-    const messageData = {
-      chatID: activeChat._id,
-      senderID: currentUser._id,
-      receiverId: activeChat._id,
-      text,
-      createdAt: new Date(),
-    };
-
-    // Join the chat room (so server emits to the right room)
-    socket.emit("joinChat", activeChat._id);
-
-    // Emit fields expected by backend socket handler
-    socket.emit("sendMessage", {
-      chatID: messageData.chatID,
-      senderID: messageData.senderID,
-      text: messageData.text,
-    });
-
-    // Optimistically append message locally
-    setMessages((prev) => [...prev, messageData]);
+  const fetchMessages = async () => {
+    try {
+      const res = await api.get(`/messages/${activeChat._id}`);
+      setMessages(res.data);
+    } catch (err) {
+      console.error("Failed to load messages", err);
+    }
   };
 
+  fetchMessages();
+
+  // listen for new messages
+  socket.on("receive-message", (newMessage) => {
+    if (newMessage.chatID === activeChat._id) {
+      setMessages((prev) => [...prev, newMessage]);
+    }
+  });
+
+  // cleanup
+  return () => {
+    socket.off("receive-message");
+  };
+}, [activeChat]);
   return (
     <div className="h-screen flex flex-col">
       <div className="flex flex-1">
+
+        {/* Sidebar */}
         <Sidebar
           onOpenSearch={() => {
             setShowSearch(true);
@@ -67,41 +82,31 @@ const Chat = ({ currentUser }) => {
           }}
         />
 
+        {/* Left Panel */}
         {showSearch ? (
           <SearchFriend />
         ) : (
           <ChatList
-            chats={chats}
             onSelectChat={(chat) => {
               setActiveChat(chat);
               setShowSearch(false);
-              setMessages([]); // optional: reset messages on chat switch
             }}
           />
         )}
 
-        {!showSearch && (
-          (activeChat && (
-            <div
-              className="flex flex-col flex-1 bg-cover bg-center"
-              style={{ backgroundImage: `url(${bg})` }}
-            >
-              <ChatHeader chat={activeChat} myUserId={currentUser?._id} />
-              <MessageList messages={messages} myUserId={currentUser?._id} />
-              <MessageInput onSendMessage={handleSendMessage} />
-            </div>
-          )) || (
-            <div className="flex-1 flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${bg})` }}>
-              <div className="bg-white/80 p-6 rounded-md text-center">
-                <h2 className="text-lg font-semibold mb-2">No conversation selected</h2>
-                <p className="text-sm text-gray-600">Select a chat from the left or start a new conversation.</p>
-              </div>
-            </div>
-          )
+        {/* Chat Window */}
+        {!showSearch && activeChat && (
+          <div
+            className="flex flex-col flex-1 bg-cover bg-center"
+            style={{ backgroundImage: `url(${bg}) `}}
+          >
+            <ChatHeader chat={activeChat} myUserId={myUserId} />
+            <MessageList messages={messages} myUserId={myUserId} />
+            <MessageInput chatId={activeChat._id} />
+          </div>
         )}
       </div>
     </div>
   );
 };
-
 export default Chat;
