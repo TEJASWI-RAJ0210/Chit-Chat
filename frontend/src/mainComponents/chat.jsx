@@ -41,35 +41,57 @@ const Chat = () => {
   }, [myUserId]);
 
   /* ---------------- FETCH + SOCKET MESSAGES ---------------- */
-useEffect(() => {
-  if (!activeChat) return;
+  useEffect(() => {
+    if (!activeChat) return;
 
-  // join socket room
-  socket.emit("join-chat", activeChat._id);
+    // join socket room (server expects `joinChat`)
+    socket.emit("joinChat", activeChat._id);
 
-  const fetchMessages = async () => {
-    try {
-      const res = await api.get(`/messages/${activeChat._id}`);
-      setMessages(res.data);
-    } catch (err) {
-      console.error("Failed to load messages", err);
-    }
-  };
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/messages/${activeChat._id}`);
+        setMessages(res.data);
+      } catch (err) {
+        console.error("Failed to load messages", err);
+      }
+    };
 
-  fetchMessages();
+    fetchMessages();
 
-  // listen for new messages
-  socket.on("receive-message", (newMessage) => {
-    if (newMessage.chatID === activeChat._id) {
-      setMessages((prev) => [...prev, newMessage]);
-    }
-  });
+    // listen for new messages (server emits `receiveMessage`)
+    const handleReceive = (newMessage) => {
+      if (!newMessage) return;
+      if (newMessage.chatID === activeChat._id || newMessage.chat === activeChat._id) {
+        setMessages((prev) => [...prev, newMessage]);
+      }
+    };
 
-  // cleanup
-  return () => {
-    socket.off("receive-message");
-  };
-}, [activeChat]);
+    socket.on("receiveMessage", handleReceive);
+
+    // cleanup
+    return () => {
+      socket.off("receiveMessage", handleReceive);
+    };
+  }, [activeChat]);
+
+  /* ---------------- PRESENCE ---------------- */
+  useEffect(() => {
+    if (!myUserId) return;
+
+    // inform server this user is online
+    socket.emit("user-online", myUserId);
+
+    const handleOnline = (list) => {
+      // optional: update UI with online users list
+      // console.log('online users', list);
+    };
+
+    socket.on("online-users", handleOnline);
+
+    return () => {
+      socket.off("online-users", handleOnline);
+    };
+  }, [myUserId]);
   return (
     <div className="h-screen flex flex-col">
       <div className="flex flex-1">

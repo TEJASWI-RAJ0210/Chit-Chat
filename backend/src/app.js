@@ -4,6 +4,8 @@ import cookieParser from "cookie-parser"
 import authRoutes from "./routes/Auth.route.js"
 import userRoutes from "./routes/user.route.js"
 import friendRoutes from "./routes/friend.route.js"
+import chatRoutes from "./routes/chat.route.js"
+import messageRoutes from "./routes/message.route.js"
 
 const app= express()
 
@@ -22,6 +24,8 @@ app.use(express.json())
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/friends', friendRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/message', messageRoutes);
 
 
 export { app}

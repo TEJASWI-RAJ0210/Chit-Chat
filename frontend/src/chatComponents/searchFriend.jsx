@@ -6,6 +6,7 @@ import {
   sendFriendRequest,
   searchUser,
   getFriendRequests,
+  createChat,
 } from "../API.js";
 
 const SearchFriend = () => {
@@ -46,8 +47,14 @@ const SearchFriend = () => {
 
   /* ✅ Accept request */
   const acceptRequest = async (id) => {
-    await acceptFriendRequest(id);
-    setRequests(prev => prev.filter(u => u._id !== id));
+    try {
+      const res = await acceptFriendRequest(id);
+      // try to create/fetch chat immediately so it appears in chat list
+      try { await createChat(id); } catch (e) { /* ignore chat create errors */ }
+      setRequests(prev => prev.filter(u => u._id !== id));
+    } catch (err) {
+      alert('Failed to accept request');
+    }
   };
 
   /* ❌ Reject request */

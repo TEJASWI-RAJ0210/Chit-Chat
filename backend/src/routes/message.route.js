@@ -10,28 +10,33 @@ const router = Router();
 router.get("/:chatId", async (req, res) => {
     try {
         const chatId = req.params.chatId;
-        const messages = await Message.find({ chat: chatId }).populate("senderID", "fullName email username profilePic");
+        const messages = await Message.find({ chatID: chatId }).populate("senderID", "fullName email username profilePic");
         res.status(200).json(messages);
     } catch (error) {
-        res.status(500).json({ message: "Error fetching messages", error });
+        res.status(500).json({ message: "Error fetching messages", error: error.message || error });
     }
 });
 router.post("/", async (req, res) => {
     try {
-        const { chatId, senderId, content } = req.body;
+        const { chatId, chatID, senderId, senderID, content, text } = req.body;
+        const chat = chatId || chatID;
+        const sender = senderId || senderID;
+        const messageText = content || text;
+
         const message = new Message({
-            chat: chatId,
-            sender: senderId,
-            content
+            chatID: chat,
+            senderID: sender,
+            text: messageText
         });
         await message.save();
-        await Chat.findByIdAndUpdate(chatId, { lastMessage: message._id });
+        await Chat.findByIdAndUpdate(chat, { lastMessage: message._id });
         const populatedMessage = await Message.findById(message._id)
             .populate("senderID", "fullName email username profilePic");
         res.status(201).json(populatedMessage);
-        io.to(chatId).emit("receive-message", populatedMessage);
+        const io = req.app.get('io');
+        if (io) io.to(String(chat)).emit("receive-message", populatedMessage);
     } catch (error) {
-        res.status(500).json({ message: "Error sending message", error });
+        res.status(500).json({ message: "Error sending message", error: error.message || error });
     }
 });
 

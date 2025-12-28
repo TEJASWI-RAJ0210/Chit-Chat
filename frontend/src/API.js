@@ -101,17 +101,20 @@ export const getFriendRequests = async () => {
   }
 };
 
-export const getChats = async () => {
+export const getChats = async (userId) => {
   try {
-    return await api.get('/chat');
+    return await api.get(`/chat/${userId}`);
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'failed to fetch chats');
+    throw new Error(
+      error.response?.data?.message || "failed to fetch chats"
+    );
   }
-}
+};
 
 export const createChat = async (friendId) => {
   try {
-    return await api.post('/chat', { friendId });
+    const userId = localStorage.getItem('userId');
+    return await api.post('/chat', { userId1: userId, userId2: friendId });
   } catch (error) {
     throw new Error(error.response?.data?.message || 'failed to create chat');
   }
@@ -125,13 +128,19 @@ export const getMessages = async (chatId) => {
   } 
 }
 
-export const sendMessage = async (chatId, content) => {
+export const sendMessage = async (chatId, text) => {
   try {
-    return await api.post('/messages', { chatId, content });
+    return await api.post("/messages", {
+      chatID: chatId,
+      senderID: localStorage.getItem("userId"),
+      text
+    });
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'failed to send message');
+    console.error(error.response?.data);
+    throw new Error("Error sending message");
   }
-}
+};
+
 
 // Automatically attach token
 api.interceptors.request.use((config) => {

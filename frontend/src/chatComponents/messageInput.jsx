@@ -10,16 +10,22 @@ const MessageInput = ({ onSendMessage ,chatId}) => {
     setMessage(e.target.value);
   };
 
-  const handleSend =async (e) => {
-    e.preventDefault();
+  const handleSend = async (e) => {
+  e.preventDefault();
 
-    if (!message.trim()) return;
-    const res= await sendMessage(chatId, message);
-    socket.emit("send-message", res.data);
+  if (!message.trim()) return;
 
-    onSendMessage(message); 
-    setMessage("");
-  };
+  await sendMessage(chatId, message); // ✅ fixed
+
+  socket.emit("sendMessage", {
+    chatID: chatId,
+    senderID: localStorage.getItem("userId"),
+    text: message,
+  });
+
+  setMessage("");
+};
+
 
   return (
     <div className="w-full p-3 border-t">
