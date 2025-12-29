@@ -1,12 +1,12 @@
+import "./env.js"; // Must be first
 import dotenv from "dotenv";
 import connectDB from "./db/index.js";
 import cors from "cors";
 import authRouter from './routes/Auth.route.js';
-import {app} from "./app.js"
+import { app } from "./app.js"
 import express from "express";
-dotenv.config({
-    path: './.env'
-})
+
+// dotenv.config calls removed as they are now in env.js
 import http from "http";
 import { Server } from "socket.io";
 import chatRoutes from "./routes/chat.route.js";
@@ -14,13 +14,13 @@ import messageRoutes from "./routes/message.route.js";
 
 
 connectDB()
-.then(() => {
-  console.log('MongoDB connected');
-})
-.catch((err) => {
-    console.log("MONOGODB connection failed !!!",err);
+  .then(() => {
+    console.log('MongoDB connected');
+  })
+  .catch((err) => {
+    console.log("MONOGODB connection failed !!!", err);
     process.exit(1);
-})
+  })
 
 
 /* ------------------ SERVER ------------------ */

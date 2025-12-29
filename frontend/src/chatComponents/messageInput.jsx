@@ -3,7 +3,7 @@ import { SendHorizontal, SmilePlus, Paperclip } from "lucide-react";
 import socket from "../socket/socket";
 import { sendMessage } from "../API.js";
 
-const MessageInput = ({ onSendMessage ,chatId}) => {
+const MessageInput = ({ onSendMessage, chatId, overrideOnSend }) => {
   const [message, setMessage] = useState("");
 
   const handleInputChange = (e) => {
@@ -11,20 +11,26 @@ const MessageInput = ({ onSendMessage ,chatId}) => {
   };
 
   const handleSend = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!message.trim()) return;
+    if (!message.trim()) return;
 
-  await sendMessage(chatId, message); // ✅ fixed
+    if (overrideOnSend) {
+      await overrideOnSend(message);
+      setMessage("");
+      return;
+    }
 
-  socket.emit("sendMessage", {
-    chatID: chatId,
-    senderID: localStorage.getItem("userId"),
-    text: message,
-  });
+    await sendMessage(chatId, message); // ✅ fixed
 
-  setMessage("");
-};
+    socket.emit("sendMessage", {
+      chatID: chatId,
+      senderID: localStorage.getItem("userId"),
+      text: message,
+    });
+
+    setMessage("");
+  };
 
 
   return (
