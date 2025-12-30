@@ -6,15 +6,16 @@ import userRoutes from "./routes/user.route.js"
 import friendRoutes from "./routes/friend.route.js"
 import chatRoutes from "./routes/chat.route.js"
 import messageRoutes from "./routes/message.route.js"
+import aiRoutes from "./routes/ai.route.js"
 
-const app= express()
+const app = express()
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true
 }))
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
+app.use(express.json({ limit: "16kb" }))
+app.use(express.urlencoded({ extended: true, limit: "16kb" }))
 app.use(express.static("public"))
 
 app.use(cookieParser())
@@ -26,6 +27,7 @@ app.use('/api/user', userRoutes)
 app.use('/api/friends', friendRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/message', messageRoutes);
+app.use('/api/ai', aiRoutes);
 
 
-export { app}
+export { app }

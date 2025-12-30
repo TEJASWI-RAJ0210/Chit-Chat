@@ -73,6 +73,10 @@ web_modules/
 .env
 .env.test
 .env.production
+<<<<<<< HEAD
+=======
+.env.local
+>>>>>>> ad81bf349b57ea4eab4196b07a8b7a70fb7b78dd
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

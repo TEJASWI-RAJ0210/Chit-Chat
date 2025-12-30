@@ -42,37 +42,24 @@ const Chat = () => {
 
   /* ---------------- FETCH + SOCKET MESSAGES ---------------- */
   useEffect(() => {
-    if (!activeChat) return;
+  if (!activeChat) return;
 
-    // join socket room (server expects `joinChat`)
-    socket.emit("joinChat", activeChat._id);
+  socket.emit("joinChat", activeChat._id);
 
-    const fetchMessages = async () => {
-      try {
-        const res = await api.get(`/messages/${activeChat._id}`);
-        setMessages(res.data);
-      } catch (err) {
-        console.error("Failed to load messages", err);
-      }
-    };
+  const handleReceive = (newMessage) => {
+    if (newMessage.chatID === activeChat._id) {
+      setMessages((prev) => [...prev, newMessage]);
+    }
+  };
 
-    fetchMessages();
+  socket.on("receiveMessage", handleReceive);
 
-    // listen for new messages (server emits `receiveMessage`)
-    const handleReceive = (newMessage) => {
-      if (!newMessage) return;
-      if (newMessage.chatID === activeChat._id || newMessage.chat === activeChat._id) {
-        setMessages((prev) => [...prev, newMessage]);
-      }
-    };
+  return () => {
+    socket.off("receiveMessage", handleReceive);
+  };
+}, [activeChat]);
 
-    socket.on("receiveMessage", handleReceive);
-
-    // cleanup
-    return () => {
-      socket.off("receiveMessage", handleReceive);
-    };
-  }, [activeChat]);
+    
 
   /* ---------------- PRESENCE ---------------- */
   useEffect(() => {
