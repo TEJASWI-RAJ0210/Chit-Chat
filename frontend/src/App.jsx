@@ -5,16 +5,17 @@ import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponents/Settings.jsx";
 import Chat from "./mainComponents/chat.jsx";
+import ChatAiPage from "./mainComponents/ChatAiPage.jsx";
 
 import socket from "./socket/socket.js";
 import { useEffect } from "react";
- const App = () => {
+const App = () => {
   useEffect(() => {
-    socket.connect();          
+    socket.connect();
     console.log("Socket connected");
 
     return () => {
-      socket.disconnect();     
+      socket.disconnect();
       console.log("Socket disconnected");
     };
   }, []);
@@ -27,7 +28,8 @@ import { useEffect } from "react";
         <Route path="/SignIn" element={<SignIn />} />
         <Route path="/Settings" element={<SettingsPage />} />
         <Route path="/chat" element={<Chat />} />
-       
+        <Route path="/ai-chat" element={<ChatAiPage />} />
+
       </Routes>
     </BrowserRouter>
   );

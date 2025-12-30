@@ -9,14 +9,13 @@ router.post("/", async (req, res) => {
         let chat = await Chat.findOne({
             participants: { $all: [userId1, userId2] }
         }).populate("participants", "fullName email username profilePic")
-          .populate({   
-            path: "messages",
-            options: { sort: { createdAt: -1 }, limit: 1 },
+          .populate({
+            path: 'lastMessage',
             populate: {
-                path: "sender",
-                select: "fullName email username profilePic"
+              path: 'senderID',
+              select: 'fullName email username profilePic'
             }
-        });
+          });
         if (!chat) {
             chat = new Chat({
                 participants: [userId1, userId2]
@@ -38,13 +37,13 @@ router.get("/:userId", async (req, res) => {
         })
         .populate("participants", "fullName email username profilePic")
         .populate({
-            path: "messages",
-            options: { sort: { createdAt: -1 }, limit: 1 },
-            populate: {
-                path: "sender",
-                select: "fullName email username profilePic"
-            }
-        });
+          path: 'lastMessage',
+          populate: {
+            path: 'senderID',
+            select: 'fullName email username profilePic'
+          }
+        })
+        .sort({ updatedAt: -1 });
         res.status(200).json(chats);
     } catch (error) {
         res.status(500).json({ message: "Error fetching chats", error });

@@ -65,7 +65,21 @@ router.post("/accept/:senderId",protect, async (req, res) =>{
     await sender.save();
     await receiver.save();
 
-    res.json({message:"Friend request accepted"});
+    // ensure a chat exists between the two users
+    try {
+        let chat = await Chat.findOne({ participants: { $all: [sender._id, receiver._id] } });
+        if (!chat) {
+            chat = new Chat({ participants: [sender._id, receiver._id] });
+            await chat.save();
+            chat = await Chat.findById(chat._id).populate('participants', 'fullName email username profilePic');
+        }
+
+        res.json({ message: "Friend request accepted", chat });
+    } catch (err) {
+        // even if chat creation fails, return success for accepting
+        console.error('Chat creation error:', err);
+        res.json({ message: "Friend request accepted" });
+    }
 
 });
 
