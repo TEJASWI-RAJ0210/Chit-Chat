@@ -3,12 +3,16 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
-
 import { app } from "./app.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 
 dotenv.config();
+
+
+
+// Multer config
+
 
 /* ------------------ SERVER ------------------ */
 const server = http.createServer(app);

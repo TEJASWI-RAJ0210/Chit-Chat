@@ -4,7 +4,6 @@ import MessageList from "../chatComponents/messageList.jsx";
 import MessageInput from "../chatComponents/messageInput.jsx";
 import ChatList from "../chatComponents/chatList.jsx";
 import Sidebar from "../chatComponents/sidebar.jsx";
-import SearchFriend from "../chatComponents/searchFriend.jsx";
 import bg from "../assets/chat_bg.jpeg";
 import socket from "../socket/socket.js";
 import api from "../API.js";
@@ -17,7 +16,6 @@ const Chat = () => {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [showSearch, setShowSearch] = useState(false);
 
   /* ---------------- FETCH CHATS ---------------- */
   useEffect(() => {
@@ -84,27 +82,17 @@ const Chat = () => {
       <div className="flex flex-1">
 
         {/* Sidebar */}
-        <Sidebar
-          onOpenSearch={() => {
-            setShowSearch(true);
-            setActiveChat(null);
+        <Sidebar />
+
+        {/* Left Panel */}
+        <ChatList
+          onSelectChat={(chat) => {
+            setActiveChat(chat);
           }}
         />
 
-        {/* Left Panel */}
-        {showSearch ? (
-          <SearchFriend />
-        ) : (
-          <ChatList
-            onSelectChat={(chat) => {
-              setActiveChat(chat);
-              setShowSearch(false);
-            }}
-          />
-        )}
-
         {/* Chat Window */}
-        {!showSearch && activeChat && (
+        {activeChat && (
           <div
             className="flex flex-col flex-1 bg-cover bg-center"
             style={{ backgroundImage: `url(${bg}) `}}

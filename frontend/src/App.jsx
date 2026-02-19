@@ -6,6 +6,7 @@ import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponents/Settings.jsx";
 import Chat from "./mainComponents/chat.jsx";
 import ChatAiPage from "./mainComponents/ChatAiPage.jsx";
+import SearchFriendPage from "./mainComponents/SearchFriendPage.jsx";
 
 import socket from "./socket/socket.js";
 import { useEffect } from "react";
@@ -26,9 +27,10 @@ const App = () => {
         <Route path="/" element={<SignUp />} />
         <Route path="/UserName" element={<UserName />} />
         <Route path="/SignIn" element={<SignIn />} />
-        <Route path="/Settings" element={<SettingsPage />} />
+        <Route path="/chat/Settings" element={<SettingsPage />} />
         <Route path="/chat" element={<Chat />} />
-        <Route path="/ai-chat" element={<ChatAiPage />} />
+        <Route path="/chat/searchFriend" element={<SearchFriendPage />} />
+        <Route path="/chat/ai-chat" element={<ChatAiPage />} />
 
       </Routes>
     </BrowserRouter>

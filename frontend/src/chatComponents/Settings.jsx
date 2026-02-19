@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState,useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../API.js";
 import {
@@ -21,9 +21,11 @@ const SettingsPage = () => {
     bio: "",
   });
   const [loading, setLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const navigate = useNavigate();
-  
+  const fileInputRef = useRef(null);
+
   useEffect(() => {
     if (!userId) return;
 
@@ -67,6 +69,24 @@ const SettingsPage = () => {
       alert("Failed to update profile");
     }
   };
+
+  const handleUploadPicture = async () => {
+    if (!selectedFile) return;
+    const form = new FormData();
+    form.append("profilePic", selectedFile);
+
+    try {
+      const res = await api.put(`/user/upload-pic/${userId}`, form, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      // update local state/ display success, e.g.:
+      console.log("new user:", res.data);
+    } catch (err) {
+      console.error("upload failed", err);
+      alert("Could not upload picture");
+    }
+  };
+
   if (loading) return <p>Loading settings...</p>;
 
 
@@ -119,10 +139,20 @@ const SettingsPage = () => {
           Your Profile Picture
         </h3>
 
-        <div className="w-[130px] h-[132px] border border-dashed border-gray-400 rounded-xl 
-            flex flex-col items-center justify-center cursor-pointer bg-white mb-6">
+        <div
+          className="w-[130px] h-[132px] border border-dashed border-gray-400 rounded-xl 
+            flex flex-col items-center justify-center cursor-pointer bg-white mb-6"
+          onClick={() => fileInputRef.current?.click()}
+        >
           <div className="text-3xl mb-1">+</div>
-         <p className="text-[13px] text-gray-500 whitespace-nowrap">Upload your photo</p>
+          <p className="text-[13px] text-gray-500 whitespace-nowrap">Upload your photo</p>
+          {selectedFile && (
+            <img
+              src={URL.createObjectURL(selectedFile)}
+              alt="preview"
+              className="absolute w-[130px] h-[132px] object-cover rounded-xl"
+            />
+          )}
         </div>
 
         <hr className="border-t-2 border-[#717B8C] mb-8" />
@@ -213,9 +243,23 @@ const SettingsPage = () => {
             <button type="reset" className="text-gray-600 font-medium">
               Reset
             </button>
+
+            <button onClick={handleUploadPicture}>Upload</button>
           </div>
 
         </form>
+
+        <input
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          ref={fileInputRef}
+          onChange={e => {
+            const file = e.target.files[0];
+            setSelectedFile(file);
+          }}
+        />
+        
       </div>
     </div>
   );

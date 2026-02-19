@@ -5,7 +5,7 @@ import { RiGeminiFill } from "react-icons/ri";
 import { FaUserFriends } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const Sidebar = ({ onOpenSearch }) => {
+const Sidebar = () => {
   const navigate = useNavigate();
 
   return (
@@ -16,7 +16,11 @@ const Sidebar = ({ onOpenSearch }) => {
 
       <div className="flex flex-col items-center gap-6 flex-1 mt-4">
         <div className="relative group">
-          <FiHome size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" onClick={() => navigate('/chat')} />
+          <FiHome 
+            size={24} 
+            className="text-gray-400 hover:text-green-500 cursor-pointer" 
+            onClick={() => navigate('/chat')} 
+          />
           <span className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Home</span>
         </div>
 
@@ -36,12 +40,12 @@ const Sidebar = ({ onOpenSearch }) => {
                   </div> */}
 
         <div className="relative group">
-          <FaUserFriends size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" onClick={() => { if (onOpenSearch) onOpenSearch(); else navigate('/searchFriend'); }} />
+          <FaUserFriends size={24} className="text-gray-400 hover:text-green-500 cursor-pointer" onClick={() => navigate('/chat/searchFriend')} />
           <span className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Friends</span>
         </div>
 
         <div className="relative group">
-          <RiGeminiFill size={24} className="hover:text-green-500 text-gray-400 cursor-pointer" onClick={() => navigate('/ai-chat')} />
+          <RiGeminiFill size={24} className="hover:text-green-500 text-gray-400 cursor-pointer" onClick={() => navigate('/chat/ai-chat')} />
           <span className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">AI Help</span>
         </div>
       </div>
@@ -49,7 +53,7 @@ const Sidebar = ({ onOpenSearch }) => {
       <div className="w-full flex flex-col items-center justify-center mt-4 gap-4">
         <div className="w-10 h-px bg-gray-600 rounded" />
         <div className="relative group">
-          <FiSettings size={24} className="hover:text-green-500 text-gray-400 cursor-pointer" onClick={() => navigate('/settings')} />
+          <FiSettings size={24} className="hover:text-green-500 text-gray-400 cursor-pointer" onClick={() => navigate('/chat/Settings')} />
           <span className="absolute left-14 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Settings</span>
         </div>
 
