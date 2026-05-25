@@ -51,13 +51,7 @@ io.on("connection", (socket) => {
     console.log(`User joined chat ${chatID}`);
   });
 
-  /* Send message */
-  socket.on("sendMessage", async ({ chatID, senderID, text }) => {
-    const message = { chatID, senderID, text };
-
-    io.to(chatID).emit("receiveMessage", message);
-  });
-
+ 
   /* Disconnect */
   socket.on("disconnect", () => {
     for (let [userId, socketId] of onlineUsers.entries()) {
@@ -72,6 +66,7 @@ io.on("connection", (socket) => {
   });
 });
 
+export {io};
 /* ------------------ START ------------------ */
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

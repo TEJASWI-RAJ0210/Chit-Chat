@@ -151,4 +151,13 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const analyzeSentiment = async (message) => {
+  try {
+    const response = await api.post('/ai/sentiment', { message });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Network error' };
+  }
+}
+
 export default api;

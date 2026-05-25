@@ -1,46 +1,79 @@
-import React, { useState } from "react";
-import { SendHorizontal, SmilePlus, Paperclip } from "lucide-react";
-import { sendMessage } from "../API.js";
+import React, { useState, useRef } from 'react';
+import { Send, Paperclip, Smile } from 'lucide-react';
+import { sendMessage } from '../API.js';
 
-const MessageInput = ({ chatId }) => {
-  const [message, setMessage] = useState("");
+const MessageInput = ({ chatId, overrideOnSend }) => {
+  const [message, setMessage] = useState('');
+  const [sending, setSending]  = useState(false);
+  const inputRef = useRef();
 
   const handleSend = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+    e?.preventDefault();
+    if (!message.trim() || sending) return;
 
-    // ✅ only API call
-    await sendMessage(chatId, message);
+    setSending(true);
+    try {
+      if (typeof overrideOnSend === 'function') {
+        await overrideOnSend(message);
+      } else {
+        await sendMessage(chatId, message);
+      }
+    } catch (err) {
+      console.error('Send failed:', err);
+    } finally {
+      setMessage('');
+      setSending(false);
+      inputRef.current?.focus();
+    }
+  };
 
-    setMessage("");
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) handleSend(e);
   };
 
   return (
-    <div className="w-full p-3 border-t">
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2 shadow-md"
-      >
+    <div className="shrink-0 px-5 py-4 bg-white border-t border-gray-100">
+      <div className="flex items-center gap-2 bg-[#f7f8fc] border border-gray-200
+                      rounded-2xl px-4 py-2.5 focus-within:border-[#00e5a0]/60
+                      focus-within:ring-2 focus-within:ring-[#00e5a0]/10 transition-all">
+
+        {/* Attachment */}
+        <button type="button"
+          className="text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+          <Paperclip size={17} />
+        </button>
+
+        {/* Input */}
         <input
+          ref={inputRef}
           type="text"
-          placeholder="Type a new message here"
-          className="flex-grow outline-none"
+          placeholder="Write a message…"
+          className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400
+                     outline-none min-w-0"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
 
-        <button type="button" className="text-gray-600 hover:text-black">
-          <Paperclip />
+        {/* Emoji */}
+        <button type="button"
+          className="text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+          <Smile size={17} />
         </button>
 
-        <button type="button" className="text-gray-600 hover:text-black">
-          <SmilePlus />
+        {/* Send */}
+        <button
+          onClick={handleSend}
+          disabled={!message.trim() || sending}
+          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0
+                      transition-all duration-150
+                      ${message.trim()
+                        ? 'bg-[#0f1117] text-white hover:bg-[#00e5a0] hover:text-[#0f1117] shadow-sm'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+        >
+          <Send size={14} />
         </button>
-
-        <button type="submit" className="text-gray-600 hover:text-black">
-          <SendHorizontal />
-        </button>
-      </form>
+      </div>
     </div>
   );
 };
