@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './messageBubble.jsx';
 
@@ -71,27 +70,8 @@ const MessageList = ({ messages, myUserId }) => {
       })}
 
       <div ref={bottomRef} />
-=======
-import React from "react";
-import MessageBubble from "./messageBubble.jsx";
-
-const MessageList = ({ messages, myUserId }) => {
-  return (
-    <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-      {messages.map((message) => (
-        <MessageBubble
-          key={message._id}
-          message={message}
-          myUserId={myUserId}
-        />
-      ))}
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
     </div>
   );
 };
 
-<<<<<<< HEAD
 export default MessageList;
-=======
-export default MessageList;
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
