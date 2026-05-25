@@ -18,3 +18,7 @@ export const chatWithAI = async (req, res) => {
         res.status(500).json({ error: "Failed to generate response" });
     }
 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> c87fe41b76793837656014758f2e52d615d56cca

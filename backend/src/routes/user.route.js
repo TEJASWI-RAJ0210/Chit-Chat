@@ -1,8 +1,24 @@
 import { Router } from 'express';
+<<<<<<< HEAD
 import User from '../models/user.model.js';
 
 const router = Router();
 
+=======
+import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import User from "../models/user.model.js";
+import { uploadToCloudinary } from "../utils/Cloudinary.js";
+
+const upload = multer({ dest: "uploads/" });
+
+
+
+const router = Router();
+
+
+
+>>>>>>> c87fe41b76793837656014758f2e52d615d56cca
 // Get User Profile Route
 router.get("/:userId", async (req, res) => {
   try {
@@ -52,5 +68,31 @@ router.put("/update/:userId", async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
+=======
+router.put("/upload-pic/:userId", upload.single("profilePic"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No image uploaded" });
+    }
+
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "profile_pics",
+    });
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      { profilePic: result.secure_url },
+      { new: true }
+    ).select("fullName email username contactNumber bio profilePic");
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ message: "Error uploading profile picture" });
+  }
+});
+
+
+>>>>>>> c87fe41b76793837656014758f2e52d615d56cca
 
 export default router;
