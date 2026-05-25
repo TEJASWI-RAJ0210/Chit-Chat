@@ -3,24 +3,12 @@ import { Server } from "socket.io";
 import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
-<<<<<<< HEAD
-
-=======
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
 import { app } from "./app.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 
 dotenv.config();
 
-<<<<<<< HEAD
-=======
-
-
-// Multer config
-
-
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
 /* ------------------ SERVER ------------------ */
 const server = http.createServer(app);
 
@@ -62,17 +50,7 @@ io.on("connection", (socket) => {
     console.log(`User joined chat ${chatID}`);
   });
 
-<<<<<<< HEAD
  
-=======
-  /* Send message */
-  socket.on("sendMessage", async ({ chatID, senderID, text }) => {
-    const message = { chatID, senderID, text };
-
-    io.to(chatID).emit("receiveMessage", message);
-  });
-
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
   /* Disconnect */
   socket.on("disconnect", () => {
     for (let [userId, socketId] of onlineUsers.entries()) {
@@ -87,10 +65,7 @@ io.on("connection", (socket) => {
   });
 });
 
-<<<<<<< HEAD
 export {io};
-=======
->>>>>>> c87fe41b76793837656014758f2e52d615d56cca
 /* ------------------ START ------------------ */
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
