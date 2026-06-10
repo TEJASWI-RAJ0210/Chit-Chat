@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getChats } from '../API.js';
 import socket from '../socket/socket.js';
-import { FiSearch, FiEdit } from 'react-icons/fi';
+import { FiSearch, FiEdit, FiSettings } from 'react-icons/fi';
+import {useNavigate} from 'react-router-dom';
 
 const getAvatar = (user) =>
   user?.profilePic ||
@@ -78,6 +79,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
     const name   = `${friend?.fullName || ''} ${friend?.username || ''}`.toLowerCase();
     return name.includes(search.toLowerCase());
   });
+  const navigate = useNavigate();
 
   return (
     <div className="w-[280px] h-full bg-[#15181f] border-r border-white/[0.06]
@@ -189,6 +191,33 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
           );
         })}
       </div>
+      {/* Fixed user profile at bottom */}
+<div className="shrink-0 border-t border-white/[0.06] px-3 py-3 bg-[#15181f]">
+  <div className="flex items-center gap-3 px-2 py-2 rounded-2xl hover:bg-white/5 
+                  transition-colors cursor-pointer"
+       onClick={() => navigate('/settings')}>
+    <div className="relative shrink-0">
+      <img
+        src={getAvatar({ _id: loggedInUserId, profilePic: localStorage.getItem('profilePic') })}
+        alt="me"
+        className="w-9 h-9 rounded-2xl object-cover"
+      />
+      {/* Always green — it's you, you're online */}
+      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full 
+                       bg-[#00e5a0] border-2 border-[#15181f]" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium text-white truncate">
+        {localStorage.getItem('fullName') || 'You'}
+      </p>
+      <p className="text-[11px] text-[#00e5a0]/60 truncate">
+        @{localStorage.getItem('username') || ''}
+      </p>
+    </div>
+    <FiSettings size={14} className="text-gray-600 hover:text-gray-400 
+                                      transition-colors shrink-0" />
+  </div>
+</div>
     </div>
   );
 };
