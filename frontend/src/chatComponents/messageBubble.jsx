@@ -1,9 +1,9 @@
 import React from 'react';
 
 const sentimentStyle = {
-  positive: { bubble: 'bg-[#e6faf3] border-[#a8edcc]',    dot: 'bg-[#00b87a]', label: '😊' },
-  negative: { bubble: 'bg-[#fff0f0] border-[#ffc5c5]',    dot: 'bg-red-400',   label: '😟' },
-  neutral:  { bubble: 'bg-white     border-gray-200',      dot: 'bg-gray-300',  label: null  },
+  positive: { bubble: 'bg-[#e6faf3] border-[#a8edcc]', label: '😊' },
+  negative: { bubble: 'bg-[#fff0f0] border-[#ffc5c5]', label: '😟' },
+  neutral:  { bubble: 'bg-white border-gray-200',       label: null  },
 };
 
 const formatTime = (dateStr) => {
@@ -21,29 +21,34 @@ const MessageBubble = ({ message, myUserId }) => {
 
   return (
     <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`
+        relative max-w-[72%] px-4 py-2.5 rounded-2xl border text-sm leading-relaxed shadow-sm
+        ${isMe
+          ? 'bg-[#0f1117] border-transparent text-white rounded-br-md'
+          : `${style.bubble} text-gray-800 rounded-bl-md`}
+      `}>
 
-      {/* Bubble */}
-      <div
-        className={`
-          relative max-w-[72%] px-4 py-2.5 rounded-2xl border text-sm
-          leading-relaxed shadow-sm
-          ${isMe
-            ? 'bg-[#0f1117] border-transparent text-white rounded-br-md'
-            : `${style.bubble} border text-gray-800 rounded-bl-md`}
-        `}
-      >
-        {/* Message text */}
-        <p className="break-words">{text}</p>
+        {/* Message text — supports emoji rendering natively */}
+        <p className="break-words whitespace-pre-wrap">{text}</p>
 
-        {/* Time + sentiment */}
-        <div className={`flex items-center gap-1.5 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] ${isMe ? 'text-gray-400' : 'text-gray-400'}`}>
-            {time}
-          </span>
+        {/* Timestamp + sentiment */}
+        <div className={`flex items-center gap-1.5 mt-1
+                         ${isMe ? 'justify-end' : 'justify-start'}`}>
+          <span className="text-[10px] text-gray-400">{time}</span>
 
-          {/* Sentiment dot (only on received messages) */}
+          {/* ✅ Show sentiment emoji on received messages when not neutral */}
           {!isMe && label !== 'neutral' && (
-            <span className="text-[10px]">{style.label}</span>
+            <span
+              className="text-[11px]"
+              title={`Sentiment: ${label}`}
+            >
+              {style.label}
+            </span>
+          )}
+
+          {/* ✅ Show subtle read tick on sent messages */}
+          {isMe && (
+            <span className="text-[10px] text-gray-500">✓</span>
           )}
         </div>
       </div>

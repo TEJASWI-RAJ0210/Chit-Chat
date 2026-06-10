@@ -19,11 +19,11 @@ const formatTime = (dateStr) => {
 };
 
 const ChatList = ({ onSelectChat, activeChatId }) => {
-  const [chats, setChats]        = useState([]);
-  const [loading, setLoading]    = useState(true);
-  const [onlineUsers, setOnline] = useState([]);
-  const [search, setSearch]      = useState('');
-  const loggedInUserId           = localStorage.getItem('userId');
+  const [chats,       setChats]   = useState([]);
+  const [loading,     setLoading] = useState(true);
+  const [onlineUsers, setOnline]  = useState([]);
+  const [search,      setSearch]  = useState('');
+  const loggedInUserId            = localStorage.getItem('userId');
 
   const fetchChats = useCallback(async () => {
     if (!loggedInUserId) return;
@@ -39,28 +39,22 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
 
   useEffect(() => { fetchChats(); }, [fetchChats]);
 
-  // ✅ When a new message arrives via socket, update that chat's
-  // lastMessage in the list without a full refetch
+  // Live update last message when socket fires
   useEffect(() => {
     const handleReceive = (newMsg) => {
       const incomingChatId = String(newMsg.chatID || newMsg.chatId || newMsg.chat);
-
       setChats((prev) => {
-        // Move the updated chat to the top and update its lastMessage
         const updated = prev.map((chat) => {
           if (String(chat._id) !== incomingChatId) return chat;
           return {
             ...chat,
             lastMessage: {
-              // ✅ field is "text" not "content"
               text: newMsg.text || newMsg.content || '',
               createdAt: newMsg.createdAt || new Date().toISOString(),
             },
             updatedAt: new Date().toISOString(),
           };
         });
-
-        // Bubble the updated chat to the top
         const idx = updated.findIndex((c) => String(c._id) === incomingChatId);
         if (idx > 0) {
           const [moved] = updated.splice(idx, 1);
@@ -69,12 +63,10 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
         return updated;
       });
     };
-
     socket.on('receiveMessage', handleReceive);
     return () => socket.off('receiveMessage', handleReceive);
   }, []);
 
-  // Track online users
   useEffect(() => {
     const fn = (list) => setOnline(list);
     socket.on('online-users', fn);
@@ -83,7 +75,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
 
   const filtered = chats.filter((chat) => {
     const friend = chat.participants.find((p) => p._id !== loggedInUserId);
-    const name = (friend?.fullName || friend?.username || '').toLowerCase();
+    const name   = `${friend?.fullName || ''} ${friend?.username || ''}`.toLowerCase();
     return name.includes(search.toLowerCase());
   });
 
@@ -103,13 +95,12 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
           </button>
         </div>
 
-        {/* Search */}
         <div className="flex items-center gap-2 bg-white/5 border border-white/[0.08]
                         rounded-xl px-3 py-2 focus-within:border-[#00e5a0]/40 transition-colors">
           <FiSearch size={13} className="text-gray-500 shrink-0" />
           <input
             type="text"
-            placeholder="Search conversations…"
+            placeholder="Search name or username…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="bg-transparent text-xs text-white placeholder-gray-600 outline-none flex-1"
@@ -120,7 +111,6 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
       {/* List */}
       <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5">
 
-        {/* Skeleton */}
         {loading && (
           <div className="flex flex-col gap-2 px-3 mt-2">
             {[1, 2, 3].map((i) => (
@@ -140,13 +130,11 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
         )}
 
         {filtered.map((chat) => {
-          const friend = chat.participants.find((p) => p._id !== loggedInUserId);
+          const friend   = chat.participants.find((p) => p._id !== loggedInUserId);
           if (!friend) return null;
 
           const isOnline = onlineUsers.includes(friend._id);
           const isActive = chat._id === activeChatId;
-
-          // ✅ "text" is the correct field — matches your Message model
           const lastMsg  = chat.lastMessage?.text || 'No messages yet';
           const lastTime = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);
 
@@ -160,7 +148,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
                             ? 'bg-[#00e5a0]/10 border border-[#00e5a0]/20'
                             : 'hover:bg-white/5 border border-transparent'}`}
             >
-              {/* Avatar */}
+              {/* Avatar with online dot */}
               <div className="relative shrink-0">
                 <img
                   src={getAvatar(friend)}
@@ -172,8 +160,10 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
                                   ${isOnline ? 'bg-[#00e5a0]' : 'bg-gray-600'}`} />
               </div>
 
-              {/* Text */}
+              {/* Text block */}
               <div className="flex-1 min-w-0">
+
+                {/* Row 1: full name + time */}
                 <div className="flex items-center justify-between gap-1">
                   <span className={`text-sm font-medium truncate
                                     ${isActive ? 'text-white' : 'text-gray-200'}`}>
@@ -181,7 +171,15 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
                   </span>
                   <span className="text-[10px] text-gray-600 shrink-0">{lastTime}</span>
                 </div>
-                {/* ✅ Last message preview */}
+
+                {/* ✅ Row 2: @username */}
+                {friend.username && (
+                  <p className="text-[11px] text-[#00e5a0]/60 truncate">
+                    @{friend.username}
+                  </p>
+                )}
+
+                {/* Row 3: last message */}
                 <p className={`text-xs truncate mt-0.5
                                ${isActive ? 'text-[#00e5a0]/70' : 'text-gray-500'}`}>
                   {lastMsg}

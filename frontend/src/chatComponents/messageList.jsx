@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import MessageBubble from './messageBubble.jsx';
 
-// Group messages by date for date separators
 const getDateLabel = (dateStr) => {
   if (!dateStr) return null;
   const d   = new Date(dateStr);
@@ -12,17 +11,25 @@ const getDateLabel = (dateStr) => {
   return d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 };
 
-const MessageList = ({ messages, myUserId }) => {
-  const bottomRef = useRef(null);
+const MessageList = ({ messages, myUserId, highlightedId }) => {
+  const bottomRef    = useRef(null);
+  const msgRefs      = useRef({});   // { [messageId]: domNode }
 
+  /* Auto-scroll to bottom on new messages */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Build list with date separators
+  /* Scroll to highlighted (search result) message */
+  useEffect(() => {
+    if (!highlightedId) return;
+    const node = msgRefs.current[highlightedId];
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightedId]);
+
+  /* Build list with date separators */
   const items = [];
   let lastLabel = null;
-
   messages.forEach((msg) => {
     const label = getDateLabel(msg.createdAt);
     if (label && label !== lastLabel) {
@@ -33,15 +40,12 @@ const MessageList = ({ messages, myUserId }) => {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-1
-                    bg-[#f7f8fc]">
+    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-1 bg-[#f7f8fc]">
 
       {messages.length === 0 && (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
           <div className="w-14 h-14 rounded-3xl bg-white shadow-sm flex items-center
-                          justify-center text-2xl">
-            💬
-          </div>
+                          justify-center text-2xl">💬</div>
           <p className="text-sm font-medium text-gray-500">No messages yet</p>
           <p className="text-xs text-gray-400">Say something to get the conversation started!</p>
         </div>
@@ -60,12 +64,21 @@ const MessageList = ({ messages, myUserId }) => {
             </div>
           );
         }
+
+        const isHighlighted = item.msg._id && item.msg._id === highlightedId;
+
         return (
-          <MessageBubble
+          <div
             key={item.key}
-            message={item.msg}
-            myUserId={myUserId}
-          />
+            ref={(el) => { if (item.msg._id) msgRefs.current[item.msg._id] = el; }}
+            className={`transition-all duration-300 rounded-2xl
+                        ${isHighlighted ? 'bg-[#00e5a0]/10 -mx-2 px-2 py-1' : ''}`}
+          >
+            <MessageBubble
+              message={item.msg}
+              myUserId={myUserId}
+            />
+          </div>
         );
       })}
 
