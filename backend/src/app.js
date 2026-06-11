@@ -7,6 +7,12 @@ import friendRoutes from "./routes/friend.route.js"
 import chatRoutes from "./routes/chat.route.js"
 import messageRoutes from "./routes/message.route.js"
 import aiRoutes from "./routes/ai.route.js"
+import uploadRoutes from './routes/uploadRoutes.js';
+
+import fs from 'fs';
+if (!fs.existsSync('./public/temp')) {
+  fs.mkdirSync('./public/temp', { recursive: true });
+}
 
 const app = express()
 
@@ -28,6 +34,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/message', messageRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/upload', uploadRoutes);
 
 
 export { app }

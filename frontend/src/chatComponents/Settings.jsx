@@ -3,136 +3,138 @@ import { useNavigate } from "react-router-dom";
 import api from "../API.js";
 import Sidebar from "./sidebar.jsx";
 
-// ─── Privacy content ──────────────────────────────────────────────────────────
 const privacySections = [
-  {
-    title: "Data We Collect",
-    icon: "🗂️",
-    body: `ChitChat collects only what's necessary to run the service: your name, email address, username, and the messages you send. Profile pictures are stored securely via Cloudinary. We never sell your personal data to third parties.`,
-  },
-  {
-    title: "End-to-End Messaging",
-    icon: "🔒",
-    body: `Messages sent between users travel over encrypted WebSocket connections (TLS). While messages are stored in our database to support chat history, access is restricted to the participants of each conversation.`,
-  },
-  {
-    title: "Password Security",
-    icon: "🛡️",
-    body: `Your password is never stored in plain text. We use bcrypt with a salt factor of 10 to hash all passwords before saving them. Even our engineers cannot see your password.`,
-  },
-  {
-    title: "Authentication Tokens",
-    icon: "🪪",
-    body: `ChitChat uses short-lived JWT access tokens paired with refresh tokens for session management. Tokens are stored in HTTP-only cookies where possible to reduce XSS exposure. Sessions expire automatically after inactivity.`,
-  },
-  {
-    title: "Who Can See You",
-    icon: "👁️",
-    body: `Your online/offline status is visible to users you share a chat with. Your email address is never shown to other users. Your bio and profile picture are visible to your friends and anyone who searches for your username.`,
-  },
-  {
-    title: "Data Deletion",
-    icon: "🗑️",
-    body: `You may request deletion of your account and all associated data at any time by contacting support. Upon deletion, your messages, profile, and media will be permanently removed from our servers within 30 days.`,
-  },
-  {
-    title: "Third-Party Services",
-    icon: "🔗",
-    body: `ChitChat integrates with Cloudinary (media storage) and Groq API (AI responses). These services have their own privacy policies. AI chat messages may be processed by Groq's servers to generate responses; do not share sensitive personal information in AI conversations.`,
-  },
-  {
-    title: "Contact & Concerns",
-    icon: "✉️",
-    body: `If you have questions or concerns about your privacy, reach out to us at privacy@chitchat.app. We aim to respond to all privacy-related inquiries within 48 hours.`,
-  },
+  { title: "Data We Collect", icon: "🗂️", body: `ChitChat collects only what's necessary to run the service: your name, email address, username, and the messages you send. Profile pictures are stored securely via Cloudinary. We never sell your personal data to third parties.` },
+  { title: "End-to-End Messaging", icon: "🔒", body: `Messages sent between users travel over encrypted WebSocket connections (TLS). While messages are stored in our database to support chat history, access is restricted to the participants of each conversation.` },
+  { title: "Password Security", icon: "🛡️", body: `Your password is never stored in plain text. We use bcrypt with a salt factor of 10 to hash all passwords before saving them. Even our engineers cannot see your password.` },
+  { title: "Authentication Tokens", icon: "🪪", body: `ChitChat uses short-lived JWT access tokens paired with refresh tokens for session management. Tokens are stored in HTTP-only cookies where possible to reduce XSS exposure. Sessions expire automatically after inactivity.` },
+  { title: "Who Can See You", icon: "👁️", body: `Your online/offline status is visible to users you share a chat with. Your email address is never shown to other users. Your bio and profile picture are visible to your friends and anyone who searches for your username.` },
+  { title: "Data Deletion", icon: "🗑️", body: `You may request deletion of your account and all associated data at any time by contacting support. Upon deletion, your messages, profile, and media will be permanently removed from our servers within 30 days.` },
+  { title: "Third-Party Services", icon: "🔗", body: `ChitChat integrates with Cloudinary (media storage) and Groq API (AI responses). These services have their own privacy policies. AI chat messages may be processed by Groq's servers to generate responses; do not share sensitive personal information in AI conversations.` },
+  { title: "Contact & Concerns", icon: "✉️", body: `If you have questions or concerns about your privacy, reach out to us at privacy@chitchat.app. We aim to respond to all privacy-related inquiries within 48 hours.` },
 ];
 
-// ─── Avatar helper ─────────────────────────────────────────────────────────────
 const getAvatar = (profilePic, userId) =>
   profilePic || `https://api.dicebear.com/7.x/thumbs/svg?seed=${userId || "default"}`;
 
-// ─── Component ─────────────────────────────────────────────────────────────────
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState("account");
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    username: "",
-    contactNumber: "",
-    bio: "",
-    profilePic: "",
+  const [activeTab,  setActiveTab]  = useState("account");
+  const [formData,   setFormData]   = useState({
+    fullName: "", email: "", username: "",
+    contactNumber: "", bio: "", profilePic: "",
   });
-  const [previewPic, setPreviewPic] = useState(null);
-  const [picFile, setPicFile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null); // { type: 'success'|'error', msg }
+  const [previewPic,  setPreviewPic]  = useState(null);
+  const [picFile,     setPicFile]     = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [saving,      setSaving]      = useState(false);
+  const [uploadPct,   setUploadPct]   = useState(0);
+  const [uploading,   setUploading]   = useState(false);
+  const [toast,       setToast]       = useState(null);
   const fileRef = useRef();
-  const userId = localStorage.getItem("userId");
+  const userId  = localStorage.getItem("userId");
   const navigate = useNavigate();
 
-  // Fetch user
+  // Fetch user on mount
   useEffect(() => {
     if (!userId) return;
-    const fetch = async () => {
-      try {
-        const res = await api.get(`/user/${userId}`);
+    api.get(`/user/${userId}`)
+      .then((res) => {
         setFormData({
-          fullName: res.data.fullName || "",
-          email: res.data.email || "",
-          username: res.data.username || "",
+          fullName:      res.data.fullName      || "",
+          email:         res.data.email         || "",
+          username:      res.data.username      || "",
           contactNumber: res.data.contactNumber || "",
-          bio: res.data.bio || "",
-          profilePic: res.data.profilePic || "",
+          bio:           res.data.bio           || "",
+          profilePic:    res.data.profilePic    || "",
         });
-      } catch (e) {
-        console.error("Fetch user failed", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
+      })
+      .catch((e) => console.error("Fetch user failed", e))
+      .finally(() => setLoading(false));
   }, [userId]);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
-    setTimeout(() => setToast(null), 3000);
+    setTimeout(() => setToast(null), 3500);
   };
 
   const handleChange = (e) =>
     setFormData((p) => ({ ...p, [e.target.name]: e.target.value }));
 
+  // File selected — show preview immediately, store file for later upload
   const handlePicChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("error", "Image must be under 5 MB.");
+      return;
+    }
     setPicFile(file);
     setPreviewPic(URL.createObjectURL(file));
+    e.target.value = ""; // allow re-selecting same file
+  };
+
+  const handleReset = () => {
+    setPreviewPic(null);
+    setPicFile(null);
+  };
+
+  // ── Upload pic to Cloudinary via our /api/upload route ──
+  const uploadProfilePic = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+    setUploadPct(0);
+    try {
+      const res = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) =>
+          setUploadPct(Math.round((e.loaded * 100) / e.total)),
+      });
+      return res.data.url; // Cloudinary secure_url
+    } finally {
+      setUploading(false);
+      setUploadPct(0);
+    }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      // If you have Cloudinary set up, upload picFile here and get back a URL,
-      // then include it as profilePic in the PUT body.
-      await api.put(`/user/update/${userId}`, {
-        fullName: formData.fullName,
-        email: formData.email,
+      let profilePicUrl = formData.profilePic; // keep existing if no new file
+
+      // ✅ If user picked a new picture, upload it first
+      if (picFile) {
+        profilePicUrl = await uploadProfilePic(picFile);
+        if (!profilePicUrl) {
+          showToast("error", "Image upload failed. Try again.");
+          return;
+        }
+        // Update localStorage so sidebar/chatList avatars refresh immediately
+        localStorage.setItem("profilePic", profilePicUrl);
+      }
+
+      // Save all fields including the new profilePic URL
+      const res = await api.put(`/user/update/${userId}`, {
+        fullName:      formData.fullName,
+        email:         formData.email,
         contactNumber: formData.contactNumber,
-        bio: formData.bio,
+        bio:           formData.bio,
+        profilePic:    profilePicUrl,
       });
+
+      // Update local state so avatar updates without refetch
+      setFormData((p) => ({ ...p, profilePic: profilePicUrl }));
+      setPreviewPic(null);
+      setPicFile(null);
+
       showToast("success", "Profile updated successfully!");
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       showToast("error", "Failed to update profile.");
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleReset = () => {
-    setPreviewPic(null);
-    setPicFile(null);
   };
 
   if (loading)
@@ -143,16 +145,14 @@ const SettingsPage = () => {
     );
 
   const avatarSrc = previewPic || getAvatar(formData.profilePic, userId);
+  const isBusy    = saving || uploading;
 
   return (
     <div className="flex h-screen bg-[#0f1117] text-white overflow-hidden font-['DM_Sans',sans-serif]">
-      {/* Google font */}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap');`}</style>
 
-      {/* ── Sidebar (reused from Chat) ── */}
       <Sidebar />
 
-      {/* ── Main ── */}
       <div className="flex flex-col flex-1 overflow-hidden">
 
         {/* Top bar */}
@@ -162,17 +162,13 @@ const SettingsPage = () => {
           </h1>
           <p className="text-sm text-gray-400 mb-6">Manage your account and privacy</p>
 
-          {/* Tabs */}
           <div className="flex gap-1 border-b border-white/10">
             {["account", "privacy"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-5 py-2.5 text-sm font-medium capitalize transition-colors relative ${
-                  activeTab === tab
-                    ? "text-[#00e5a0]"
-                    : "text-gray-500 hover:text-gray-300"
-                }`}
+                className={`px-5 py-2.5 text-sm font-medium capitalize transition-colors relative
+                  ${activeTab === tab ? "text-[#00e5a0]" : "text-gray-500 hover:text-gray-300"}`}
               >
                 {tab === "account" ? "Account Settings" : "Privacy & Security"}
                 {activeTab === tab && (
@@ -183,7 +179,6 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-10 py-8">
 
           {/* ══ ACCOUNT TAB ══ */}
@@ -193,19 +188,40 @@ const SettingsPage = () => {
               {/* Profile picture */}
               <div className="flex items-center gap-6">
                 <div className="relative group">
+                  {/* Avatar */}
                   <img
                     src={avatarSrc}
                     alt="avatar"
                     className="w-20 h-20 rounded-2xl object-cover border-2 border-white/10"
                   />
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current.click()}
-                    className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center
-                               opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-medium"
-                  >
-                    Change
-                  </button>
+
+                  {/* Upload progress ring overlay */}
+                  {uploading && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/70
+                                    flex flex-col items-center justify-center gap-1">
+                      <span className="text-white text-xs font-bold">{uploadPct}%</span>
+                      <div className="w-10 h-1 bg-white/20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#00e5a0] rounded-full transition-all duration-200"
+                          style={{ width: `${uploadPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Change overlay (hidden while uploading) */}
+                  {!uploading && (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current.click()}
+                      className="absolute inset-0 rounded-2xl bg-black/50 flex items-center
+                                 justify-center opacity-0 group-hover:opacity-100
+                                 transition-opacity text-xs text-white font-medium"
+                    >
+                      Change
+                    </button>
+                  )}
+
                   <input
                     ref={fileRef}
                     type="file"
@@ -214,12 +230,17 @@ const SettingsPage = () => {
                     onChange={handlePicChange}
                   />
                 </div>
+
                 <div>
                   <p className="text-sm font-medium text-white">Profile Photo</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    JPG, PNG or WebP · max 5 MB
-                  </p>
-                  {previewPic && (
+                  <p className="text-xs text-gray-500 mt-0.5">JPG, PNG or WebP · max 5 MB</p>
+                  {/* Show filename of pending upload */}
+                  {picFile && !uploading && (
+                    <p className="text-xs text-[#00e5a0] mt-1 truncate max-w-[180px]">
+                      {picFile.name} — will upload on save
+                    </p>
+                  )}
+                  {previewPic && !uploading && (
                     <button
                       type="button"
                       onClick={handleReset}
@@ -233,19 +254,16 @@ const SettingsPage = () => {
 
               <Divider />
 
-              {/* Row 1 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Field label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Your full name" />
-                <Field label="Email" name="email" value={formData.email} onChange={handleChange} type="email" placeholder="you@example.com" />
+                <Field label="Full Name"     name="fullName"      value={formData.fullName}      onChange={handleChange} placeholder="Your full name" />
+                <Field label="Email"         name="email"         value={formData.email}         onChange={handleChange} type="email" placeholder="you@example.com" />
               </div>
 
-              {/* Row 2 */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <Field label="Username" name="username" value={formData.username} onChange={handleChange} disabled placeholder="@username" note="Cannot be changed" />
-                <Field label="Phone Number" name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="+91 00000 00000" />
+                <Field label="Username"      name="username"      value={formData.username}      onChange={handleChange} disabled placeholder="@username" note="Cannot be changed" />
+                <Field label="Phone Number"  name="contactNumber" value={formData.contactNumber} onChange={handleChange} placeholder="+91 00000 00000" />
               </div>
 
-              {/* Bio */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Bio</label>
                 <textarea
@@ -255,26 +273,32 @@ const SettingsPage = () => {
                   rows={4}
                   placeholder="Tell people a little about yourself…"
                   className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white
-                             placeholder-gray-600 outline-none focus:border-[#00e5a0]/50 focus:ring-1
-                             focus:ring-[#00e5a0]/20 resize-none transition-colors"
+                             placeholder-gray-600 outline-none focus:border-[#00e5a0]/50
+                             focus:ring-1 focus:ring-[#00e5a0]/20 resize-none transition-colors"
                 />
               </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-4 pt-1">
                 <button
                   type="submit"
-                  disabled={saving}
-                  className="px-6 py-2.5 bg-[#00e5a0] text-[#0f1117] text-sm font-semibold rounded-xl
-                             hover:bg-[#00c98d] transition-colors disabled:opacity-50"
+                  disabled={isBusy}
+                  className="px-6 py-2.5 bg-[#00e5a0] text-[#0f1117] text-sm font-semibold
+                             rounded-xl hover:bg-[#00c98d] transition-colors disabled:opacity-50
+                             flex items-center gap-2"
                 >
-                  {saving ? "Saving…" : "Save Changes"}
+                  {uploading
+                    ? `Uploading… ${uploadPct}%`
+                    : saving
+                    ? "Saving…"
+                    : "Save Changes"}
                 </button>
                 <button
-                  type="reset"
+                  type="button"
                   onClick={handleReset}
+                  disabled={isBusy}
                   className="px-6 py-2.5 bg-white/5 border border-white/10 text-sm text-gray-400
-                             rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+                             rounded-xl hover:bg-white/10 hover:text-white transition-colors
+                             disabled:opacity-40"
                 >
                   Reset
                 </button>
@@ -289,13 +313,10 @@ const SettingsPage = () => {
                 Your privacy matters to us. Here's a plain-English explanation of how ChitChat
                 handles your data and keeps your account secure.
               </p>
-
               {privacySections.map((s) => (
-                <div
-                  key={s.title}
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5
-                             hover:border-[#00e5a0]/30 transition-colors"
-                >
+                <div key={s.title}
+                     className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5
+                                hover:border-[#00e5a0]/30 transition-colors">
                   <div className="flex items-center gap-3 mb-2">
                     <span className="text-xl">{s.icon}</span>
                     <h3 className="text-sm font-semibold text-white font-['Syne',sans-serif]">
@@ -305,25 +326,19 @@ const SettingsPage = () => {
                   <p className="text-sm text-gray-400 leading-relaxed">{s.body}</p>
                 </div>
               ))}
-
-              <p className="text-xs text-gray-600 mt-2">
-                Last updated: May 2026 · ChitChat v1.0
-              </p>
+              <p className="text-xs text-gray-600 mt-2">Last updated: May 2026 · ChitChat v1.0</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Toast ── */}
+      {/* Toast */}
       {toast && (
-        <div
-          className={`fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-medium shadow-xl
-            transition-all ${
-              toast.type === "success"
-                ? "bg-[#00e5a0] text-[#0f1117]"
-                : "bg-red-500 text-white"
-            }`}
-        >
+        <div className={`fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-medium
+                         shadow-xl transition-all
+                         ${toast.type === "success"
+                           ? "bg-[#00e5a0] text-[#0f1117]"
+                           : "bg-red-500 text-white"}`}>
           {toast.msg}
         </div>
       )}
@@ -331,7 +346,6 @@ const SettingsPage = () => {
   );
 };
 
-// ─── Small helpers ─────────────────────────────────────────────────────────────
 const Divider = () => <div className="border-t border-white/10" />;
 
 const Field = ({ label, note, ...props }) => (
@@ -346,8 +360,7 @@ const Field = ({ label, note, ...props }) => (
                   placeholder-gray-600 outline-none transition-colors
                   ${props.disabled
                     ? "opacity-40 cursor-not-allowed"
-                    : "focus:border-[#00e5a0]/50 focus:ring-1 focus:ring-[#00e5a0]/20"
-                  }`}
+                    : "focus:border-[#00e5a0]/50 focus:ring-1 focus:ring-[#00e5a0]/20"}`}
     />
   </div>
 );

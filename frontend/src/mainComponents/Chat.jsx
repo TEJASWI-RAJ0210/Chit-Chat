@@ -11,9 +11,7 @@ import api          from '../API.js';
 const EmptyState = () => (
   <div className="flex flex-col flex-1 items-center justify-center bg-[#f7f8fc] gap-4">
     <div className="w-20 h-20 rounded-3xl bg-white shadow-md flex items-center
-                    justify-center text-4xl">
-      💬
-    </div>
+                    justify-center text-4xl">💬</div>
     <div className="text-center">
       <p className="text-base font-semibold text-gray-700 font-['Syne',sans-serif]">
         Your messages
@@ -28,9 +26,11 @@ const EmptyState = () => (
 const Chat = () => {
   const myUserId = localStorage.getItem('userId');
 
-  const [activeChat,  setActiveChat]  = useState(null);
-  const [messages,    setMessages]    = useState([]);
-  const [showSearch,  setShowSearch]  = useState(false);
+  const [activeChat,     setActiveChat]     = useState(null);
+  const [messages,       setMessages]       = useState([]);
+  const [showSearch,     setShowSearch]     = useState(false);
+  // ✅ highlightedMsgId: set by ChatHeader search, consumed by MessageList
+  const [highlightedId,  setHighlightedId]  = useState(null);
 
   /* ── Fetch + socket messages ── */
   useEffect(() => {
@@ -62,16 +62,12 @@ const Chat = () => {
   }, [myUserId]);
 
   return (
-    /* Google fonts — load once here so all child components benefit */
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap');`}</style>
 
       <div className="h-screen flex overflow-hidden font-['DM_Sans',sans-serif]">
-
-        {/* Dark sidebar */}
         <Sidebar onOpenSearch={() => { setShowSearch(true); setActiveChat(null); }} />
 
-        {/* Dark chat list OR search */}
         {showSearch ? (
           <SearchFriend />
         ) : (
@@ -81,11 +77,21 @@ const Chat = () => {
           />
         )}
 
-        {/* Light chat window */}
         {!showSearch && activeChat ? (
           <div className="flex flex-col flex-1 overflow-hidden">
-            <ChatHeader chat={activeChat} myUserId={myUserId} />
-            <MessageList messages={messages} myUserId={myUserId} />
+            {/* ✅ Pass messages for in-chat search, onSearchResult to highlight */}
+            <ChatHeader
+              chat={activeChat}
+              myUserId={myUserId}
+              messages={messages}
+              onSearchResult={(id) => setHighlightedId(id)}
+            />
+            {/* ✅ Pass highlightedId so MessageList can scroll to it */}
+            <MessageList
+              messages={messages}
+              myUserId={myUserId}
+              highlightedId={highlightedId}
+            />
             <MessageInput chatId={activeChat._id} />
           </div>
         ) : (
