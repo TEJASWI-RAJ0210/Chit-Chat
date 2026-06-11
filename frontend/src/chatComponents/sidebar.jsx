@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const NAV = [
   { icon: FiHome,               label: 'Home',     path: '/chat' },
-  { icon: FaUserFriends,        label: 'Friends',  path: '/SearchFriend', isSearch: true },
+  { icon: FaUserFriends,        label: 'Friends',  path: '/SearchFriend' },
   { icon: RiGeminiFill,         label: 'AI Chat',  path: '/ai-chat' },
 ];
 
