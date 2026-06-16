@@ -8,8 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="YOUR_LIVE_DEMO_LINK">🌐 Live Demo</a> •
-  <a href="YOUR_GITHUB_REPOSITORY_LINK">📂 Repository</a>
+  <a href="YOUR_LIVE_DEMO_LINK">🌐 Live Demo</a> 
 </p>
 
 ---
@@ -250,11 +249,11 @@ Key benefits include:
 
 ## 👥 Contributors
 
-* **Contributor 1** – *Placeholder*
-* **Contributor 2** – *Placeholder*
-* **Contributor 3** – *Placeholder*
-* **Contributor 4** – *Placeholder*
-* **Contributor 5** – *Placeholder*
+* **Contributor 1** – *Soumya Sinha*
+* **Contributor 2** – *Swoasti Bhattacharjee*
+* **Contributor 3** – *Anmol Pandey*
+* **Contributor 4** – *Swayam Mohapatra*
+* **Contributor 5** – *Tejaswi Raj*
 
 ---
 
