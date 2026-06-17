@@ -17,6 +17,11 @@ export const signup = async (userData) => {
   }
 };
 
+export const googleLogin = (accessToken) =>
+  api.post("/auth/google", {
+    accessToken,
+  });
+
 export const signin = async (userData) => {
   try {
     const response = await api.post('/auth/signin', userData);

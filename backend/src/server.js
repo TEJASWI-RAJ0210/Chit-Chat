@@ -23,6 +23,7 @@ app.use(express.json());
 /* ------------------ ROUTES ------------------ */
 app.use("/api/chat", chatRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/auth", authRoutes);
 
 /* ------------------ SOCKET.IO ------------------ */
 const io = new Server(server, {
