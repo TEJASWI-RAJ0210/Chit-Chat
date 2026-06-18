@@ -4,10 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
 import { app } from "./app.js";
-import chatRoutes from "./routes/chatRoutes.js";
-import messageRoutes from "./routes/messageRoutes.js";
+import chatRoutes from "./routes/chat.route.js";
+import messageRoutes from "./routes/message.route.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-import User from "./src/models/user.model.js";
+import User from "./models/user.model.js";
 import fs from "fs";
 
 dotenv.config();
