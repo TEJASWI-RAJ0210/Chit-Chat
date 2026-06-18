@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 import { protect } from '../middlewares/auth.middleware.js';
+import { googleLogin } from "../controllers/auth.controller.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -90,6 +91,8 @@ router.post('/signin', async (req, res) => {
         res.status(500).json({ message: 'Login Failed' });
     }
 });
+
+router.post("/google", googleLogin);
 
 // Check if username is available
 router.post("/check-username", async (req, res) => {

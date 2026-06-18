@@ -3,6 +3,8 @@ import { FcGoogle } from "react-icons/fc";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { signin } from "../API.js";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -39,6 +41,53 @@ const SignIn = () => {
     }
   };
 
+   const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
+      const userRes = await fetch(
+        "https://www.googleapis.com/oauth2/v1/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${tokenResponse.access_token}`,
+          },
+        }
+      );
+
+      const user = await userRes.json();
+
+      
+
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/google",
+        {
+          name: user.name,
+          email: user.email,
+          picture: user.picture,
+        }
+      );
+
+      console.log("Backend Response:", res.data);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.userId);
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(res.data.user)
+      );
+
+      navigate("/chat");
+    } catch (error) {
+      console.error(
+        "Google Login Error:",
+        error.response?.data || error
+      );
+    }
+  },
+
+  onError: () => {
+    console.log("Google Login Failed");
+  },
+});
   return (
     <>
       <style>{`
@@ -169,7 +218,7 @@ const SignIn = () => {
             <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '32px' }}>
               Don't have an account?{' '}
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/SignUp')}
                 style={{ color: '#00b87a', background: 'none', border: 'none',
                          cursor: 'pointer', fontWeight: 600, fontSize: '14px',
                          fontFamily: "'DM Sans', sans-serif", padding: 0 }}
@@ -268,7 +317,7 @@ const SignIn = () => {
             </div>
 
             {/* Google only */}
-            <button style={{
+            <button  onClick={() => googleLogin()} style={{
               width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
               gap: '10px', padding: '11px', borderRadius: '12px',
               border: '1.5px solid #e8eaf0', background: '#fff',

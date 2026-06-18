@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ChatHeader   from '../chatComponents/chatHeader.jsx';
 import MessageList  from '../chatComponents/messageList.jsx';
 import MessageInput from '../chatComponents/messageInput.jsx';
@@ -26,25 +26,50 @@ const EmptyState = () => (
 const Chat = () => {
   const myUserId = localStorage.getItem('userId');
 
-  const [activeChat,     setActiveChat]     = useState(null);
-  const [messages,       setMessages]       = useState([]);
-  const [showSearch,     setShowSearch]     = useState(false);
-  // ✅ highlightedMsgId: set by ChatHeader search, consumed by MessageList
-  const [highlightedId,  setHighlightedId]  = useState(null);
+  const [activeChat,    setActiveChat]    = useState(null);
+  const [messages,      setMessages]      = useState([]);
+  const [showSearch,    setShowSearch]    = useState(false);
+  const [highlightedId, setHighlightedId] = useState(null);
 
-  /* ── Fetch + socket messages ── */
+  // Ref so reconnect handler always sees latest activeChat
+  const activeChatRef = useRef(null);
+  useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
+
+  /* ── Room rejoin on reconnect ──
+     user-online is now handled in socket.js.
+     Here we only need to re-join the active chat room after a reconnect,
+     because socket rooms are lost when the connection drops.           */
+  useEffect(() => {
+    const handleReconnect = () => {
+      if (activeChatRef.current?._id) {
+        socket.emit('joinChat', activeChatRef.current._id);
+        console.log('🔁 Rejoined chat room after reconnect:', activeChatRef.current._id);
+      }
+      // Re-request online users list after reconnect
+      socket.emit('request-online-users');
+    };
+
+    socket.on('connect', handleReconnect);
+    return () => socket.off('connect', handleReconnect);
+  }, []); // empty deps — this handler is permanent for the lifetime of the page
+
+  /* ── Fetch messages + join room + receive new messages ── */
   useEffect(() => {
     if (!activeChat) return;
 
+    // Join the room for this chat
     socket.emit('joinChat', activeChat._id);
 
+    // Fetch message history
     api.get(`/messages/${activeChat._id}`)
       .then((res) => setMessages(res.data || []))
       .catch(() => setMessages([]));
 
+    // Real-time incoming messages
     const handleReceive = (newMsg) => {
-      const incomingId = newMsg.chatID || newMsg.chatId || newMsg.chat;
-      if (String(incomingId) !== String(activeChat._id)) return;
+      const incomingId = String(newMsg.chatID || newMsg.chatId || newMsg.chat || '');
+      if (incomingId !== String(activeChat._id)) return;
+
       setMessages((prev) => {
         if (prev.some((m) => m._id && m._id === newMsg._id)) return prev;
         return [...prev, newMsg];
@@ -54,12 +79,6 @@ const Chat = () => {
     socket.on('receiveMessage', handleReceive);
     return () => socket.off('receiveMessage', handleReceive);
   }, [activeChat]);
-
-  /* ── Presence ── */
-  useEffect(() => {
-    if (!myUserId) return;
-    socket.emit('user-online', myUserId);
-  }, [myUserId]);
 
   return (
     <>
@@ -79,14 +98,12 @@ const Chat = () => {
 
         {!showSearch && activeChat ? (
           <div className="flex flex-col flex-1 overflow-hidden">
-            {/* ✅ Pass messages for in-chat search, onSearchResult to highlight */}
             <ChatHeader
               chat={activeChat}
               myUserId={myUserId}
               messages={messages}
               onSearchResult={(id) => setHighlightedId(id)}
             />
-            {/* ✅ Pass highlightedId so MessageList can scroll to it */}
             <MessageList
               messages={messages}
               myUserId={myUserId}

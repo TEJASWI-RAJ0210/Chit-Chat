@@ -53,7 +53,7 @@ const UserInfoCard = ({ user, onClose }) => {
   }, [onClose]);
 
   const data     = profile || user;
-  const isOnline = onlineUsers.includes(data?._id);
+  const isOnline = onlineUsers.includes(String(data?._id));
 
   return (
     <>

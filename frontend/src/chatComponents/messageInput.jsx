@@ -3,6 +3,7 @@ import { Send, Paperclip, Smile, X, FileText, Image, Film } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 import { sendMessage } from '../API.js';
 import api from '../API.js';
+import socket from '../socket/socket.js';
 
 // ── File type helpers ──────────────────────────────────────────────
 const getMessageType = (file) => {
@@ -119,6 +120,7 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
         setUploadPct(Math.round((e.loaded * 100) / e.total));
       },
     });
+    
 
     setUploading(false);
     return res.data; // { url, resourceType, format, ... }
@@ -156,6 +158,12 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
       } else {
         // Plain text message
         await sendMessage(chatId, message);
+        // notify server/room in real-time so other clients (and this client if needed) get the message
+       socket.emit('sendMessage', {
+         chatID: chatId,
+         senderID: localStorage.getItem('userId'),
+         text: message,
+       });
       }
     } catch (err) {
       console.error('Send failed:', err);

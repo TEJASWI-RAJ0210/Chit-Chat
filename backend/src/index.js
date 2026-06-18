@@ -56,10 +56,15 @@ io.on("connection", (socket) => {
   console.log("✅ Socket connected:", socket.id);
 
   /* User online */
-  socket.on("user-online", (userId) => {
+socket.on("user-online", (userId) => {
     onlineUsers.set(userId, socket.id);
-    io.emit("online-users", Array.from(onlineUsers.keys()));
+   io.emit("online-users", Array.from(onlineUsers.keys()));
+   console.log(`👤 User online: ${userId} (${socket.id})`);
   });
+
+  socket.on("request-online-users", () => {
+  socket.emit("online-users", Array.from(onlineUsers.keys()));
+});
 
   /* Join chat room */
   socket.on("joinChat", (chatID) => {
@@ -68,11 +73,11 @@ io.on("connection", (socket) => {
   });
 
   /* Send message */
-  socket.on("sendMessage", async ({ chatID, senderID, text }) => {
-    const message = { chatID, senderID, text };
+  // socket.on("sendMessage", async ({ chatID, senderID, text }) => {
+  //   const message = { chatID, senderID, text };
 
-    io.to(chatID).emit("receiveMessage", message);
-  });
+  //   io.to(chatID).emit("receiveMessage", message);
+  // });
 
   /* Disconnect */
   socket.on("disconnect", () => {
