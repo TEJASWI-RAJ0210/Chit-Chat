@@ -28,7 +28,7 @@ const server = http.createServer(app);
 
 /* ------------------ CORS ------------------ */
 app.use(cors({
-  origin: "https://chit-chat-9je3.vercel.app/", // ⚠️ DO NOT USE "*"
+  origin: "https://chit-chat-9je3.vercel.app", // ⚠️ DO NOT USE "*"
   credentials: true
 }));
 
@@ -41,7 +41,7 @@ app.use("/api/messages", messageRoutes);
 /* ------------------ SOCKET.IO ------------------ */
 const io = new Server(server, {
   cors: {
-    origin: "https://chit-chat-9je3.vercel.app/",
+    origin: "https://chit-chat-9je3.vercel.app",
     credentials: true
   }
 });
