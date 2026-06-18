@@ -40,6 +40,70 @@ const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
   console.log("✅ Socket connected:", socket.id);
+  console.log("CONNECTED:", socket.id);
+
+  socket.onAny((event, ...args) => {
+    console.log("EVENT:", event);
+    console.log("ARGS:", args);
+  });
+  socket.on("call-user", ({ targetUserId, callerId }) => {
+  console.log("========== CALL USER ==========");
+  console.log("Caller:", callerId);
+  console.log("Target:", targetUserId);
+
+  const targetSocketId =
+    onlineUsers.get(targetUserId);
+
+  console.log("Target Socket:", targetSocketId);
+
+  if (targetSocketId) {
+    io.to(targetSocketId).emit(
+      "incoming-call",
+      { callerId }
+    );
+  }
+});
+  socket.on(
+     "offer",
+     ({ targetUserId, offer }) => {
+    const targetSocketId =
+      onlineUsers.get(targetUserId);
+
+    if (targetSocketId) {
+      io.to(targetSocketId).emit(
+        "offer",
+        offer
+      );
+    }
+  });
+
+  socket.on(
+  "answer",
+  ({ targetUserId, answer }) => {
+    const targetSocketId =
+      onlineUsers.get(targetUserId);
+
+    if (targetSocketId) {
+      io.to(targetSocketId).emit(
+        "answer",
+        answer
+      );
+    }
+  });
+
+  socket.on(
+  "ice-candidate",
+  ({ targetUserId, candidate }) => {
+    const targetSocketId =
+      onlineUsers.get(targetUserId);
+
+    if (targetSocketId) {
+      io.to(targetSocketId).emit(
+        "ice-candidate",
+        candidate
+      );
+    }
+  });
 
   /* User online */
   socket.on("user-online", (userId) => {

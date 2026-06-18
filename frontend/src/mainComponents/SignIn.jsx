@@ -218,7 +218,7 @@ const SignIn = () => {
             <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '32px' }}>
               Don't have an account?{' '}
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate('/SignUp')}
                 style={{ color: '#00b87a', background: 'none', border: 'none',
                          cursor: 'pointer', fontWeight: 600, fontSize: '14px',
                          fontFamily: "'DM Sans', sans-serif", padding: 0 }}

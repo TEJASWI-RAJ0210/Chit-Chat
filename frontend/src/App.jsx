@@ -7,6 +7,7 @@ import SettingsPage from "./chatComponents/Settings.jsx";
 import Chat from "./mainComponents/chat.jsx";
 import ChatAiPage from "./mainComponents/ChatAiPage.jsx";
 import SearchFriendPage from "./mainComponents/SearchFriendPage.jsx";
+import VideoCall from "./mainComponents/VideoCall.jsx";
 
 import socket from "./socket/socket.js";
 import { useEffect } from "react";
@@ -31,6 +32,7 @@ const App = () => {
         <Route path="/chat" element={<Chat />} />
         <Route path="/SearchFriend" element={<SearchFriendPage />} />
         <Route path="/ai-chat" element={<ChatAiPage />} />
+        <Route path="/video-call/:id"element={<VideoCall />}/>
 
       </Routes>
     </BrowserRouter>

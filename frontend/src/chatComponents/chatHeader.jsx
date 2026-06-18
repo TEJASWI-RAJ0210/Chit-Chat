@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Video, Phone, MoreVertical, Search, Info, X } from 'lucide-react';
 import socket from '../socket/socket.js';
 import UserInfoCard from './UserInfoCard.jsx';
+import { useNavigate } from "react-router-dom";
 
 const getAvatar = (user) =>
   user?.profilePic ||
@@ -17,6 +18,7 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
   const [matches,      setMatches]     = useState([]);
   const searchRef  = useRef(null);
   const menuRef    = useRef(null);
+  const navigate = useNavigate();
 
   const otherUser = chat?.participants?.find((u) => u._id !== myUserId);
   const isOnline  = onlineUsers.includes(otherUser?._id);
@@ -73,6 +75,23 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
     onSearchResult?.(null);
   };
 
+  const handleVideoCall = () => {
+      if (!otherUser?._id) return;
+      navigate(`/video-call/${otherUser._id}`);
+  };
+
+  useEffect(() => {
+  socket.on("incoming-call", (data) => {
+    console.log("Incoming Call", data);
+
+    alert("Incoming Call");
+  });
+
+  return () => {
+    socket.off("incoming-call");
+  };
+}, []);
+
   return (
     <>
       <div className="shrink-0 flex items-center gap-3 px-5 py-3.5
@@ -108,7 +127,7 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
               {/* Search */}
               <ActionBtn icon={Search} onClick={() => setShowSearch(true)} title="Search" />
               <ActionBtn icon={Phone}  title="Call" />
-              <ActionBtn icon={Video}  title="Video" />
+              <ActionBtn icon={Video}  title="Video"  onClick={handleVideoCall} />
 
               {/* More menu */}
               <div className="relative" ref={menuRef}>
