@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { upload } from '../middlewares/multer.middleware.js';
-import { uploadToCloudinary } from '../utils/cloudinary.js';
+import { uploadToCloudinary } from '../utils/Cloudinary.js';
 
 const router = Router();
 
