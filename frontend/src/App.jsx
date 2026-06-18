@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
 import SettingsPage from "./chatComponents/Settings.jsx";
-import Chat from "./mainComponents/chat.jsx";
+import Chat from "./mainComponents/Chat.jsx";
 import ChatAiPage from "./mainComponents/ChatAiPage.jsx";
 import SearchFriendPage from "./mainComponents/SearchFriendPage.jsx";
 import VideoCall from "./mainComponents/VideoCall.jsx";
