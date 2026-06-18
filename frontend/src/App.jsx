@@ -1,5 +1,5 @@
 import React from "react";
-import SignUp from "./mainComponents/SignUp.jsx";
+import SignUp from "./mainComponents/signUp.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import UserName from "./mainComponents/UserName.jsx";
 import SignIn from "./mainComponents/SignIn.jsx";
