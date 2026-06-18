@@ -58,7 +58,7 @@ const SignIn = () => {
       
 
       const res = await axios.post(
-        "http://localhost:5000/api/auth/google",
+        "https://chit-chat-2-i63p.onrender.com/api/auth/google",
         {
           name: user.name,
           email: user.email,
