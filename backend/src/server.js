@@ -22,7 +22,7 @@ const server = http.createServer(app);
 
 /* ── CORS ── */
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://chit-chat-9je3.vercel.app",
   credentials: true,
 }));
 app.use(express.json());
@@ -35,7 +35,7 @@ app.use("/api/upload",   uploadRoutes);
 /* ── Socket.IO ── */
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://chit-chat-9je3.vercel.app",
     credentials: true,
   },
 });
