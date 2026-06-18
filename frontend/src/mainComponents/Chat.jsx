@@ -31,57 +31,46 @@ const Chat = () => {
   const [showSearch,    setShowSearch]    = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
 
-  // ✅ Keep a ref to activeChat so the reconnect handler always
-  // has the latest value without needing it as a dependency
+  // Ref so reconnect handler always sees latest activeChat
   const activeChatRef = useRef(null);
+  useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
+
+  /* ── Room rejoin on reconnect ──
+     user-online is now handled in socket.js.
+     Here we only need to re-join the active chat room after a reconnect,
+     because socket rooms are lost when the connection drops.           */
   useEffect(() => {
-    activeChatRef.current = activeChat;
-  }, [activeChat]);
-
-  /* ── Presence + reconnection ── */
-  useEffect(() => {
-    if (!myUserId) return;
-
-    const registerOnline = () => {
-      socket.emit('user-online', myUserId);
-
-      // ✅ Re-join active chat room on every reconnect
-      // Without this, after a disconnect the socket loses room membership
-      // and io.to(chatId).emit() never reaches it — causing the "need to
-      // refresh" bug
+    const handleReconnect = () => {
       if (activeChatRef.current?._id) {
         socket.emit('joinChat', activeChatRef.current._id);
+        console.log('🔁 Rejoined chat room after reconnect:', activeChatRef.current._id);
       }
-
-      // Re-request online users list
+      // Re-request online users list after reconnect
       socket.emit('request-online-users');
     };
 
-    if (socket.connected) registerOnline();
-    socket.on('connect', registerOnline);
+    socket.on('connect', handleReconnect);
+    return () => socket.off('connect', handleReconnect);
+  }, []); // empty deps — this handler is permanent for the lifetime of the page
 
-    return () => socket.off('connect', registerOnline);
-  }, [myUserId]);
-
-  /* ── Fetch messages + join room + listen for new messages ── */
+  /* ── Fetch messages + join room + receive new messages ── */
   useEffect(() => {
     if (!activeChat) return;
 
     // Join the room for this chat
     socket.emit('joinChat', activeChat._id);
 
-    // Fetch existing messages
+    // Fetch message history
     api.get(`/messages/${activeChat._id}`)
       .then((res) => setMessages(res.data || []))
       .catch(() => setMessages([]));
 
-    // Listen for new real-time messages
+    // Real-time incoming messages
     const handleReceive = (newMsg) => {
       const incomingId = String(newMsg.chatID || newMsg.chatId || newMsg.chat || '');
       if (incomingId !== String(activeChat._id)) return;
 
       setMessages((prev) => {
-        // Prevent duplicates (REST + socket can both deliver the same message)
         if (prev.some((m) => m._id && m._id === newMsg._id)) return prev;
         return [...prev, newMsg];
       });
