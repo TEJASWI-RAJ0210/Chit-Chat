@@ -139,7 +139,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
           const friend   = chat.participants.find((p) => p._id !== loggedInUserId);
           if (!friend) return null;
 
-          const isOnline = onlineUsers.includes(friend._id);
+          const isOnline = onlineUsers.includes(String(friend._id));
           const isActive = chat._id === activeChatId;
           const lastMsg  = chat.lastMessage?.text || 'No messages yet';
           const lastTime = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);

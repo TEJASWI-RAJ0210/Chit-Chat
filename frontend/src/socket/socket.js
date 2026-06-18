@@ -20,6 +20,9 @@ socket.on("connect", () => {
   }
 });
 
+// Expose socket to the window for debugging during development only
+if (import.meta && import.meta.env && import.meta.env.DEV) window.socket = socket;
+
 socket.on("disconnect", (reason) => {
   console.log("🔴 Socket disconnected:", reason);
 });

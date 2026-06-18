@@ -120,12 +120,7 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
         setUploadPct(Math.round((e.loaded * 100) / e.total));
       },
     });
-    // notify server/room in real-time so other clients (and this client if needed) get the message
-    socket.emit('sendMessage', {
-      chatID: chatId,
-      senderID: localStorage.getItem('userId'),
-      text: message,
-    });
+    
 
     setUploading(false);
     return res.data; // { url, resourceType, format, ... }

@@ -21,7 +21,7 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
   const navigate  = useNavigate();
 
   const otherUser = chat?.participants?.find((u) => u._id !== myUserId);
-  const isOnline  = onlineUsers.includes(otherUser?._id);
+ const isOnline = onlineUsers.includes(String(otherUser?._id));
 
   /* ── Online users ── */
   useEffect(() => {
