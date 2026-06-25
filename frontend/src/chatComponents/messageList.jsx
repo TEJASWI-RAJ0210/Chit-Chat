@@ -40,7 +40,7 @@ const MessageList = ({ messages, myUserId, highlightedId }) => {
   });
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-1 bg-[#f7f8fc]">
+    <div className="flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-1 ">
 
       {messages.length === 0 && (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
