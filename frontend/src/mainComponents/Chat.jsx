@@ -7,6 +7,8 @@ import Sidebar      from '../chatComponents/sidebar.jsx';
 import SearchFriend from '../chatComponents/searchFriend.jsx';
 import socket       from '../socket/socket.js';
 import api          from '../API.js';
+import chatBg from '../assets/chat_bg.svg';
+
 
 const EmptyState = () => (
   <div className="flex flex-col flex-1 items-center justify-center bg-[#f7f8fc] gap-4">
@@ -97,7 +99,16 @@ const Chat = () => {
         )}
 
         {!showSearch && activeChat ? (
-          <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex flex-col flex-1 overflow-hidden"
+               style={{
+                 backgroundImage:`url(${chatBg})`,
+                 backgroundSize: "cover",
+                 backgroundPosition: "center",
+                 backgroundRepeat: "no-repeat",
+          
+               }}
+          
+          >
             <ChatHeader
               chat={activeChat}
               myUserId={myUserId}
