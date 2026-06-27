@@ -133,22 +133,24 @@ router.post('/', async (req, res) => {
     // This is more reliable than rooms because it doesn't require
     // the client to have called joinChat first.
     const io          = req.app.get('io');
-    const onlineUsers = req.app.get('onlineUsers'); // Map: userId → socketId
+    const onlineUsers = req.app.get('onlineUsers'); // Map: userId → Set<socketId>
 
     if (io) {
       // Also emit to room as a fallback
       io.to(chat).emit('receiveMessage', populated);
 
-      // Direct emit to each participant's socket
+      // Direct emit to each participant's socket(s)
       try {
         const chatDoc = await Chat.findById(chat).select('participants');
         if (chatDoc && onlineUsers) {
           for (const participantId of chatDoc.participants) {
             const pid      = String(participantId);
-            const socketId = onlineUsers.get(pid);
-            if (socketId) {
-              io.to(socketId).emit('receiveMessage', populated);
-              console.log(`📤 Direct emit → user ${pid} socket ${socketId}`);
+            const sockets  = onlineUsers.get(pid);
+            if (sockets) {
+              for (const socketId of sockets) {
+                io.to(socketId).emit('receiveMessage', populated);
+                console.log(`📤 Direct emit → user ${pid} socket ${socketId}`);
+              }
             }
           }
         }
@@ -189,7 +191,8 @@ router.put("/:chatId/seen", async (req, res) => {
      const io = req.app.get("io");
 
     io.to(req.params.chatId).emit("messages-seen", {
-      messageIds: unseenMessages.map(m => m._id),
+      chatId: req.params.chatId,
+      messageIds: unseenMessages.map((m) => m._id),
     });
 
     res.json({ success: true });

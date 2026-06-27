@@ -31,4 +31,10 @@ socket.on("connect_error", (err) => {
   console.error("❌ Socket connect error:", err.message);
 });
 
+window.addEventListener("beforeunload", () => {
+  if (socket.connected) {
+    socket.disconnect();
+  }
+});
+
 export default socket;

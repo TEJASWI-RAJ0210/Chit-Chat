@@ -12,15 +12,15 @@ import VideoCall from "./mainComponents/VideoCall.jsx";
 import socket from "./socket/socket.js";
 import { useEffect } from "react";
 const App = () => {
-  useEffect(() => {
-    socket.connect();
-    console.log("Socket connected");
+  // useEffect(() => {
+  //   socket.connect();
+  //   console.log("Socket connected");
 
-    return () => {
-      socket.disconnect();
-      console.log("Socket disconnected");
-    };
-  }, []);
+  //   return () => {
+  //     socket.disconnect();
+  //     console.log("Socket disconnected");
+  //   };
+  // }, []);
 
   return (
     <BrowserRouter>
