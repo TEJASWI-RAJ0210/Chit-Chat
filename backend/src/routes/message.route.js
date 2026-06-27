@@ -164,4 +164,40 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put("/:chatId/seen", async (req, res) => {
+  try {
+
+    const { userId } = req.body;
+    const unseenMessages = await Message.find({
+      chatID: req.params.chatId,
+      senderID: { $ne: userId },
+      isSeen: false,
+    });
+
+    await Message.updateMany(
+      {
+        _id: {
+          $in: unseenMessages.map((m) => m._id),
+        },
+      },
+      {
+        isSeen: true,
+        seenAt: new Date(),
+      }
+    );
+
+     const io = req.app.get("io");
+
+    io.to(req.params.chatId).emit("messages-seen", {
+      messageIds: unseenMessages.map(m => m._id),
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+});
+
 export default router;

@@ -8,6 +8,7 @@ import SearchFriend from '../chatComponents/searchFriend.jsx';
 import socket       from '../socket/socket.js';
 import api          from '../API.js';
 import chatBg from '../assets/chat_bg.svg';
+import { useNavigate } from "react-router-dom";
 
 
 const EmptyState = () => (
@@ -32,6 +33,8 @@ const Chat = () => {
   const [messages,      setMessages]      = useState([]);
   const [showSearch,    setShowSearch]    = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
+  const [incomingCall, setIncomingCall] = useState(null);
+  const navigate = useNavigate();
 
   // Ref so reconnect handler always sees latest activeChat
   const activeChatRef = useRef(null);
@@ -57,30 +60,109 @@ const Chat = () => {
 
   /* ── Fetch messages + join room + receive new messages ── */
   useEffect(() => {
-    if (!activeChat) return;
+  if (!activeChat) return;
 
-    // Join the room for this chat
-    socket.emit('joinChat', activeChat._id);
+  // Join the room
+  socket.emit("joinChat", activeChat._id);
 
-    // Fetch message history
-    api.get(`/messages/${activeChat._id}`)
-      .then((res) => setMessages(res.data || []))
-      .catch(() => setMessages([]));
+  const loadChat = async () => {
+    try {
+      // Fetch messages
+      const res = await api.get(`/messages/${activeChat._id}`);
+      setMessages(res.data || []);
 
-    // Real-time incoming messages
-    const handleReceive = (newMsg) => {
-      const incomingId = String(newMsg.chatID || newMsg.chatId || newMsg.chat || '');
-      if (incomingId !== String(activeChat._id)) return;
-
-      setMessages((prev) => {
-        if (prev.some((m) => m._id && m._id === newMsg._id)) return prev;
-        return [...prev, newMsg];
+      // Mark as seen
+      await api.put(`/messages/${activeChat._id}/seen`, {
+        userId: myUserId,
       });
-    };
 
-    socket.on('receiveMessage', handleReceive);
-    return () => socket.off('receiveMessage', handleReceive);
-  }, [activeChat]);
+    } catch (err) {
+      console.error(err);
+      setMessages([]);
+    }
+  };
+
+  loadChat();
+
+  // Real-time incoming messages
+  const handleReceive = (newMsg) => {
+    const incomingId = String(
+      newMsg.chatID ||
+      newMsg.chatId ||
+      newMsg.chat ||
+      ""
+    );
+
+    if (incomingId !== String(activeChat._id)) return;
+
+    setMessages((prev) => {
+      if (prev.some((m) => m._id === newMsg._id))
+        return prev;
+
+      return [...prev, newMsg];
+    });
+  };
+
+  socket.on("receiveMessage", handleReceive);
+
+  return () => {
+    socket.off("receiveMessage", handleReceive);
+  };
+
+}, [activeChat, myUserId]);
+
+useEffect(() => {
+
+  const handleMessagesSeen = ({ chatId }) => {
+
+    if (chatId !== activeChat?._id) return;
+
+    socket.on(
+  "messages-seen",
+  ({ messageIds }) => {
+
+    setMessages(prev =>
+      prev.map(msg => {
+
+        if (
+          messageIds.includes(msg._id)
+        ) {
+          return {
+            ...msg,
+            isSeen: true,
+          };
+        }
+
+        return msg;
+
+      })
+    );
+
+  }
+);
+  };
+
+  socket.on("messages-seen", handleMessagesSeen);
+
+  return () => {
+    socket.off("messages-seen", handleMessagesSeen);
+  };
+
+}, [activeChat]);
+
+  useEffect(() => {
+  const handleIncomingCall = (data) => {
+    console.log("Incoming Call:", data);
+
+    setIncomingCall(data);
+  };
+
+  socket.on("incoming-call", handleIncomingCall);
+
+  return () => {
+    socket.off("incoming-call", handleIncomingCall);
+  };
+}, []);
 
   return (
     <>
@@ -126,6 +208,52 @@ const Chat = () => {
           !showSearch && <EmptyState />
         )}
       </div>
+      {
+  incomingCall && (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+      <div className="bg-white rounded-2xl p-6 w-96">
+
+        <h2 className="text-xl font-bold">
+          Incoming Video Call
+        </h2>
+
+        <p className="mt-3">
+          Someone is calling you...
+        </p>
+
+        <div className="flex gap-4 mt-6">
+
+          <button
+           onClick={() => {
+
+          socket.emit("accept-call", {
+         callerId: incomingCall.callerId,
+         receiverId: myUserId,
+        });
+
+        navigate(`/video-call/${incomingCall.callerId}`);
+
+        setIncomingCall(null);
+
+        }}className="flex-1 bg-green-500 text-white py-2 rounded-lg">
+           Accept
+          </button>
+
+          <button
+            onClick={() => setIncomingCall(null)}
+            className="flex-1 bg-red-500 text-white py-2 rounded-lg"
+          >
+            Reject
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+  )
+}
     </>
   );
 };

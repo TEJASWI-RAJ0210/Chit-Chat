@@ -42,6 +42,15 @@ const messageSchema = new Schema(
       enum: ['text', 'image', 'video', 'file'],
       default: 'text',
     },
+    isSeen: {
+       type: Boolean,
+       default: false,
+    },
+
+    seenAt: {
+      type: Date,
+      default: null,
+    },
     sentiment: {
       score: { type: Number, default: 0 },
       label: {

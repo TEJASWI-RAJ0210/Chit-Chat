@@ -158,12 +158,6 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
       } else {
         // Plain text message
         await sendMessage(chatId, message);
-        // notify server/room in real-time so other clients (and this client if needed) get the message
-       socket.emit('sendMessage', {
-         chatID: chatId,
-         senderID: localStorage.getItem('userId'),
-         text: message,
-       });
       }
     } catch (err) {
       console.error('Send failed:', err);

@@ -86,11 +86,30 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
 
   const closeSearch = () => { setShowSearch(false); onSearchResult?.(null); };
 
-  const handleVideoCall = () => {
-    if (!otherUser?._id) return;
-    navigate(`/video-call/${otherUser._id}`);
+  useEffect(() => {
+  const handleAccepted = ({ receiverId }) => {
+    console.log("✅ Call Accepted");
+
+    navigate(`/video-call/${receiverId}`);
   };
 
+  socket.on("call-accepted", handleAccepted);
+
+  return () => {
+    socket.off("call-accepted", handleAccepted);
+  };
+}, [navigate]);
+
+  const handleVideoCall = () => {
+  if (!otherUser?._id) return;
+
+  socket.emit("call-user", {
+    targetUserId: otherUser._id,
+    callerId: myUserId,
+  });
+
+  console.log("📞 Calling...");
+};
   return (
     <>
       <div className="shrink-0 flex items-center gap-3 px-5 py-3.5
