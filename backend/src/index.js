@@ -5,12 +5,14 @@ import cors from "cors";
 import authRouter from './routes/Auth.route.js';
 import { app } from "./app.js"
 import express from "express";
+import User from "./models/user.model.js";
 
 // dotenv.config calls removed as they are now in env.js
 import http from "http";
 import { Server } from "socket.io";
 import chatRoutes from "./routes/chat.route.js";
 import messageRoutes from "./routes/message.route.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 
 connectDB()
@@ -35,8 +37,10 @@ app.use(cors({
 app.use(express.json());
 
 /* ------------------ ROUTES ------------------ */
+app.use("/api/auth", authRouter);
 app.use("/api/chat", chatRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/upload", uploadRoutes);
 
 /* ------------------ SOCKET.IO ------------------ */
 const io = new Server(server, {
@@ -46,25 +50,30 @@ const io = new Server(server, {
   }
 });
 
-// expose io to routes via the express app
-app.set('io', io);
-
 /* ✅ GLOBAL (IMPORTANT) */
 const onlineUsers = new Map();
+
+// expose io and shared user map to routes via the express app
+app.set('io', io);
+app.set('onlineUsers', onlineUsers);
 
 io.on("connection", (socket) => {
   console.log("✅ Socket connected:", socket.id);
 
   /* User online */
-socket.on("user-online", (userId) => {
-    onlineUsers.set(userId, socket.id);
-   io.emit("online-users", Array.from(onlineUsers.keys()));
-   console.log(`👤 User online: ${userId} (${socket.id})`);
+  socket.on("user-online", (userId) => {
+    if (!userId) return;
+    const userKey = String(userId);
+    const sockets = onlineUsers.get(userKey) || new Set();
+    sockets.add(socket.id);
+    onlineUsers.set(userKey, sockets);
+    io.emit("online-users", Array.from(onlineUsers.keys()));
+    console.log(`👤 User online: ${userKey} (${socket.id})`);
   });
 
   socket.on("request-online-users", () => {
-  socket.emit("online-users", Array.from(onlineUsers.keys()));
-});
+    socket.emit("online-users", Array.from(onlineUsers.keys()));
+  });
 
   /* Join chat room */
   socket.on("joinChat", (chatID) => {
@@ -80,11 +89,28 @@ socket.on("user-online", (userId) => {
   // });
 
   /* Disconnect */
-  socket.on("disconnect", () => {
-    for (let [userId, socketId] of onlineUsers.entries()) {
-      if (socketId === socket.id) {
-        onlineUsers.delete(userId);
+  socket.on("disconnect", async () => {
+    let disconnectedUserId = null;
+    for (const [userId, sockets] of onlineUsers.entries()) {
+      if (sockets.has(socket.id)) {
+        sockets.delete(socket.id);
+        if (sockets.size === 0) {
+          onlineUsers.delete(userId);
+          disconnectedUserId = userId;
+        } else {
+          onlineUsers.set(userId, sockets);
+        }
         break;
+      }
+    }
+
+    if (disconnectedUserId) {
+      try {
+        await User.findByIdAndUpdate(disconnectedUserId, {
+          lastSeen: new Date(),
+        });
+      } catch (e) {
+        console.error("Failed to update lastSeen:", e.message);
       }
     }
 

@@ -112,34 +112,20 @@ const Chat = () => {
 }, [activeChat, myUserId]);
 
 useEffect(() => {
-
-  const handleMessagesSeen = ({ chatId }) => {
-
+  const handleMessagesSeen = ({ chatId, messageIds }) => {
     if (chatId !== activeChat?._id) return;
 
-    socket.on(
-  "messages-seen",
-  ({ messageIds }) => {
-
-    setMessages(prev =>
-      prev.map(msg => {
-
-        if (
-          messageIds.includes(msg._id)
-        ) {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (messageIds.includes(msg._id)) {
           return {
             ...msg,
             isSeen: true,
           };
         }
-
         return msg;
-
       })
     );
-
-  }
-);
   };
 
   socket.on("messages-seen", handleMessagesSeen);
@@ -147,7 +133,6 @@ useEffect(() => {
   return () => {
     socket.off("messages-seen", handleMessagesSeen);
   };
-
 }, [activeChat]);
 
   useEffect(() => {
