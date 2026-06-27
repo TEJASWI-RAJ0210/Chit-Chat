@@ -161,7 +161,9 @@ const MessageBubble = ({ message, myUserId }) => {
           )}
 
           {isMe && (
-            <span className="text-[10px] text-gray-500">✓</span>
+             <span className="text-[10px] text-gray-500">
+                 {message.isSeen ? "✓✓ Seen" : "✓ Sent"}
+             </span>
           )}
         </div>
       </div>

@@ -71,12 +71,36 @@ io.on("connection", (socket) => {
   });
 
   /* ── WebRTC signalling ── */
-  socket.on("call-user", ({ targetUserId, callerId }) => {
-    const targetSocketId = onlineUsers.get(targetUserId);
-    if (targetSocketId) {
-      io.to(targetSocketId).emit("incoming-call", { callerId });
-    }
-  });
+ socket.on("call-user", ({ targetUserId, callerId }) => {
+  console.log("📞 Call Request");
+  console.log("Caller:", callerId);
+  console.log("Target:", targetUserId);
+
+  const targetSocketId = onlineUsers.get(targetUserId);
+
+  console.log("Target Socket:", targetSocketId);
+
+  if (targetSocketId) {
+    io.to(targetSocketId).emit("incoming-call", {
+      callerId,
+      targetUserId,
+    });
+
+    console.log("✅ Incoming call event sent");
+  } else {
+    console.log("❌ Target user is offline");
+  }
+});
+
+  socket.on("accept-call", ({ callerId, receiverId }) => {
+  const callerSocketId = onlineUsers.get(callerId);
+
+  if (callerSocketId) {
+    io.to(callerSocketId).emit("call-accepted", {
+      receiverId,
+    });
+  }
+});
 
   socket.on("offer", ({ targetUserId, offer }) => {
     const target = onlineUsers.get(targetUserId);
