@@ -9,14 +9,24 @@ const socket = io("https://chit-chat-2-i63p.onrender.com", {
   reconnectionDelayMax: 5000,
 });
 
-// ✅ Emit user-online HERE — directly on the socket's connect event.
-// This is independent of React lifecycle so it fires reliably on
-// first connect AND every reconnect, before any component mounts.
+let activeUserId = null;
+
+export const setSocketUser = (userId) => {
+  const normalizedUserId = userId ? String(userId) : "";
+  activeUserId = normalizedUserId;
+
+  if (!normalizedUserId) return;
+
+  if (socket.connected) {
+    socket.emit("user-online", normalizedUserId);
+    console.log("🟢 Marked user online:", normalizedUserId, socket.id);
+  }
+};
+
 socket.on("connect", () => {
-  const userId = localStorage.getItem("userId");
-  if (userId) {
-    socket.emit("user-online", userId);
-    console.log("🟢 Emitted user-online:", userId, socket.id);
+  if (activeUserId) {
+    socket.emit("user-online", activeUserId);
+    console.log("🟢 Reconnected user-online:", activeUserId, socket.id);
   }
 });
 

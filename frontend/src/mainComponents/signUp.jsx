@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { signup } from "../API.js";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import { setSocketUser } from "../socket/socket.js";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ const SignUp = () => {
       if (res.status === 201) {
         localStorage.setItem("token",  res.data.token);
         localStorage.setItem("userId", res.data.userId);
+        setSocketUser(res.data.userId);
         navigate("/UserName");
       }
     } catch (err) {
@@ -76,6 +78,7 @@ const SignUp = () => {
       console.log("Backend Response:", res.data);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
+      setSocketUser(res.data.userId);
 
       localStorage.setItem(
         "user",

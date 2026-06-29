@@ -168,18 +168,22 @@ router.post('/', async (req, res) => {
 
 router.put("/:chatId/seen", async (req, res) => {
   try {
-
     const { userId } = req.body;
+    const chatId = String(req.params.chatId);
+    const viewerId = String(userId);
+
     const unseenMessages = await Message.find({
-      chatID: req.params.chatId,
-      senderID: { $ne: userId },
+      chatID: chatId,
+      senderID: { $ne: viewerId },
       isSeen: false,
     });
+
+    const seenMessageIds = unseenMessages.map((m) => m._id);
 
     await Message.updateMany(
       {
         _id: {
-          $in: unseenMessages.map((m) => m._id),
+          $in: seenMessageIds,
         },
       },
       {
@@ -188,12 +192,33 @@ router.put("/:chatId/seen", async (req, res) => {
       }
     );
 
-     const io = req.app.get("io");
+    const io = req.app.get("io");
+    const onlineUsers = req.app.get("onlineUsers");
+    const payload = {
+      chatId,
+      messageIds: seenMessageIds.map((id) => String(id)),
+    };
 
-    io.to(req.params.chatId).emit("messages-seen", {
-      chatId: req.params.chatId,
-      messageIds: unseenMessages.map((m) => m._id),
-    });
+    if (io) {
+      io.to(chatId).emit("messages-seen", payload);
+
+      try {
+        const chatDoc = await Chat.findById(chatId).select("participants");
+        if (chatDoc && onlineUsers) {
+          for (const participantId of chatDoc.participants) {
+            const pid = String(participantId);
+            const sockets = onlineUsers.get(pid);
+            if (sockets) {
+              for (const socketId of sockets) {
+                io.to(socketId).emit("messages-seen", payload);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Seen receipt broadcast failed:", e.message);
+      }
+    }
 
     res.json({ success: true });
 
