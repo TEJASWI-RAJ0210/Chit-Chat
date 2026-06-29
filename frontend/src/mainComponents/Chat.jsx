@@ -76,7 +76,8 @@ const Chat = () => {
     try {
       // Fetch messages
       const res = await api.get(`/messages/${activeChat._id}`);
-      setMessages(res.data || []);
+      const serverMessages = res.data || [];
+      setMessages(serverMessages);
 
       // Mark as seen
       await api.put(`/messages/${activeChat._id}/seen`, {
@@ -90,6 +91,35 @@ const Chat = () => {
   };
 
   loadChat();
+
+  const syncSeenStatus = async () => {
+    if (!activeChat?._id) return;
+
+    try {
+      const res = await api.get(`/messages/${activeChat._id}`);
+      const serverMessages = res.data || [];
+
+      setMessages((prev) => {
+        const messageMap = new Map(prev.map((msg) => [String(msg._id), msg]));
+
+        return serverMessages.map((msg) => {
+          const existing = messageMap.get(String(msg._id));
+          if (!existing) return msg;
+
+          return {
+            ...existing,
+            ...msg,
+            isSeen: msg.isSeen ?? existing.isSeen,
+            seenAt: msg.seenAt ?? existing.seenAt,
+          };
+        });
+      });
+    } catch (err) {
+      console.error('Seen sync failed:', err);
+    }
+  };
+
+  const syncInterval = setInterval(syncSeenStatus, 3000);
 
   // Real-time incoming messages
   const handleReceive = (newMsg) => {
@@ -113,6 +143,7 @@ const Chat = () => {
   socket.on("receiveMessage", handleReceive);
 
   return () => {
+    clearInterval(syncInterval);
     socket.off("receiveMessage", handleReceive);
   };
 
