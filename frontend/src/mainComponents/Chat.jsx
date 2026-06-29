@@ -5,7 +5,7 @@ import MessageInput from '../chatComponents/messageInput.jsx';
 import ChatList     from '../chatComponents/chatList.jsx';
 import Sidebar      from '../chatComponents/sidebar.jsx';
 import SearchFriend from '../chatComponents/searchFriend.jsx';
-import socket       from '../socket/socket.js';
+import socket, { setSocketUser } from '../socket/socket.js';
 import api          from '../API.js';
 import chatBg from '../assets/chat_bg.svg';
 import { useNavigate } from "react-router-dom";
@@ -28,6 +28,7 @@ const EmptyState = () => (
 
 const Chat = () => {
   const myUserId = localStorage.getItem('userId');
+  const normalizeId = (value) => (value ? String(value) : '');
 
   const [activeChat,    setActiveChat]    = useState(null);
   const [messages,      setMessages]      = useState([]);
@@ -35,6 +36,12 @@ const Chat = () => {
   const [highlightedId, setHighlightedId] = useState(null);
   const [incomingCall, setIncomingCall] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (myUserId) {
+      setSocketUser(myUserId);
+    }
+  }, [myUserId]);
 
   // Ref so reconnect handler always sees latest activeChat
   const activeChatRef = useRef(null);
@@ -112,12 +119,14 @@ const Chat = () => {
 }, [activeChat, myUserId]);
 
 useEffect(() => {
-  const handleMessagesSeen = ({ chatId, messageIds }) => {
-    if (chatId !== activeChat?._id) return;
+  const handleMessagesSeen = ({ chatId, messageIds = [] }) => {
+    if (normalizeId(chatId) !== normalizeId(activeChat?._id)) return;
+
+    const seenIds = new Set(messageIds.map((id) => normalizeId(id)));
 
     setMessages((prev) =>
       prev.map((msg) => {
-        if (messageIds.includes(msg._id)) {
+        if (seenIds.has(normalizeId(msg._id))) {
           return {
             ...msg,
             isSeen: true,

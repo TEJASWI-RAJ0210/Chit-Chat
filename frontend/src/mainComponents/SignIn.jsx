@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { signin } from "../API.js";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import { setSocketUser } from "../socket/socket.js";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const SignIn = () => {
         localStorage.setItem("token",    res.data.token);
         localStorage.setItem("userId",   res.data.user._id);
         localStorage.setItem("username", res.data.user.username || "");
+        setSocketUser(res.data.user._id);
         // Redirect based on whether username is set
         navigate(res.data.user.username ? "/chat" : "/UserName");
       }
@@ -69,6 +71,7 @@ const SignIn = () => {
       console.log("Backend Response:", res.data);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userId", res.data.userId);
+      setSocketUser(res.data.userId);
 
       localStorage.setItem(
         "user",
