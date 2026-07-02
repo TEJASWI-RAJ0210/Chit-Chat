@@ -8,7 +8,7 @@ const getAvatar = (user) =>
   user?.profilePic ||
   `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?._id || 'default'}`;
 
-const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
+const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }) => {
   const [onlineUsers, setOnline]     = useState([]);
   const [showInfo,    setShowInfo]   = useState(false);
   const [showMenu,    setShowMenu]   = useState(false);
@@ -133,8 +133,11 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult }) => {
               <p className="text-sm font-semibold text-gray-800 truncate font-['Syne',sans-serif]">
                 {otherUser?.fullName || otherUser?.username || 'Unknown'}
               </p>
-              <p className={`text-xs font-medium ${isOnline ? 'text-[#00b87a]' : 'text-gray-400'}`}>
-                {isOnline ? '● Online' : '○ Offline'}
+              <p className={`text-xs font-medium ${
+                 isOnline ? "text-[#00b87a]": "text-gray-400"}`}>
+                  {
+                    typingUser ? `${typingUser} is typing...`: isOnline? "● Online": "○ Offline"}
+
               </p>
             </div>
 

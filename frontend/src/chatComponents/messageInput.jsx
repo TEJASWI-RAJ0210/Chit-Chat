@@ -54,17 +54,27 @@ const FilePreview = ({ file, onRemove }) => {
 };
 
 // ── Main component ─────────────────────────────────────────────────
-const MessageInput = ({ chatId, overrideOnSend }) => {
+const MessageInput = ({ chatId, overrideOnSend,targetUserId}) => {
   const [message,    setMessage]    = useState('');
   const [sending,    setSending]    = useState(false);
   const [showEmoji,  setShowEmoji]  = useState(false);
   const [file,       setFile]       = useState(null);   // selected File object
   const [uploadPct,  setUploadPct]  = useState(0);       // 0-100 upload progress
   const [uploading,  setUploading]  = useState(false);
+  
 
   const pickerRef  = useRef(null);
   const inputRef   = useRef(null);
   const fileRef    = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+
+
+  useEffect(() => {
+  return () => {
+    clearTimeout(typingTimeoutRef.current);
+  };
+}, []);
 
   // Close emoji picker on outside click
   useEffect(() => {
@@ -162,12 +172,19 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
     } catch (err) {
       console.error('Send failed:', err);
     } finally {
-      setMessage('');
+      if (targetUserId) {
+      socket.emit("stop-typing", {targetUserId,chatId});
+      }
+      clearTimeout(typingTimeoutRef.current);
+
+      setMessage("");
       setSending(false);
       setUploadPct(0);
       inputRef.current?.focus();
     }
   };
+
+  
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) handleSend(e);
@@ -247,7 +264,33 @@ const MessageInput = ({ chatId, overrideOnSend }) => {
             className="flex-1 bg-transparent text-sm text-gray-700
                        placeholder-gray-400 outline-none min-w-0"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setMessage(value);
+
+              if (!targetUserId) return;
+
+              if (!isTypingRef.current) {
+               socket.emit("typing", {
+                 targetUserId,
+                 senderName: localStorage.getItem("username"),
+                 chatID: chatId,
+                });
+
+              isTypingRef.current = true;
+              }
+
+              clearTimeout(typingTimeoutRef.current);
+
+              typingTimeoutRef.current = setTimeout(() => {
+                socket.emit("stop-typing", {
+                  targetUserId,
+                  chatID: chatId,
+              });
+
+              isTypingRef.current = false;
+               }, 1500);
+            }}
             onKeyDown={handleKeyDown}
           />
 
