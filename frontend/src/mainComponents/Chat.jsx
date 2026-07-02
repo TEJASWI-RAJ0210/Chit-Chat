@@ -34,6 +34,7 @@ const Chat = () => {
   const [showSearch,    setShowSearch]    = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
   const [incomingCall,  setIncomingCall]  = useState(null);
+  const [typingUser, setTypingUser] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -132,6 +133,46 @@ const Chat = () => {
     return () => socket.off('incoming-call', handleIncomingCall);
   }, []);
 
+  useEffect(() => {
+
+  const handleTyping = ({ senderName, chatID }) => {
+    if (chatID !== activeChat?._id)
+        return;
+    setTypingUser(senderName);
+  };
+
+  const handleStopTyping = ({ chatID }) => {
+    if (chatID !== activeChat?._id)
+        return;
+    setTypingUser("");
+  };
+
+  socket.on(
+    "user-typing",
+    handleTyping
+  );
+
+  socket.on(
+    "user-stop-typing",
+    handleStopTyping
+  );
+
+  return () => {
+
+    socket.off(
+      "user-typing",
+      handleTyping
+    );
+
+    socket.off(
+      "user-stop-typing",
+      handleStopTyping
+    );
+
+  };
+
+}, []);
+
   return (
     <>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@600;700&display=swap');`}</style>
@@ -163,13 +204,19 @@ const Chat = () => {
               myUserId={myUserId}
               messages={messages}
               onSearchResult={(id) => setHighlightedId(id)}
+              typingUser={typingUser}
             />
             <MessageList
               messages={messages}
               myUserId={myUserId}
               highlightedId={highlightedId}
             />
-            <MessageInput chatId={activeChat._id} />
+            <MessageInput
+              chatId={activeChat._id}
+              targetUserId={
+                activeChat.participants.find((u) => String(u._id) !== String(myUserId))?._id
+             }
+            />
           </div>
         ) : (
           !showSearch && <EmptyState />
