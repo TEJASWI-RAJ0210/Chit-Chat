@@ -8,26 +8,25 @@ const getAvatar = (user) =>
   `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?._id || 'default'}`;
 
 const formatLastSeen = (dateStr) => {
-  if (!dateStr) return 'A while ago';
+  if (!dateStr) return null; // return null so we can hide it cleanly
   const d       = new Date(dateStr);
   const now     = new Date();
   const diffMs  = now - d;
   const diffMin = Math.floor(diffMs / 60000);
   const diffHr  = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHr  / 24);
-
-  if (diffMin < 1)  return 'Just now';
-  if (diffMin < 60) return `${diffMin} min ago`;
-  if (diffHr  < 24) return `${diffHr} hr ago`;
-  if (diffDay === 1) return 'Yesterday';
-  if (diffDay < 7)  return `${diffDay} days ago`;
+  if (diffMin < 1)   return 'Just now';
+  if (diffMin < 60)  return `${diffMin} min ago`;
+  if (diffHr  < 24)  return `${diffHr} hr ago`;
+  if (diffDay === 1)  return 'Yesterday';
+  if (diffDay < 7)   return `${diffDay} days ago`;
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
 
 const UserInfoCard = ({ user, onClose }) => {
-  const [profile,      setProfile]      = useState(null);
-  const [loading,      setLoading]      = useState(true);
-  const [onlineUsers,  setOnlineUsers]  = useState([]);
+  const [profile,     setProfile]     = useState(null);
+  const [loading,     setLoading]     = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   /* ── Fetch full profile ── */
   useEffect(() => {
@@ -38,10 +37,15 @@ const UserInfoCard = ({ user, onClose }) => {
       .finally(() => setLoading(false));
   }, [user?._id]);
 
-  /* ── Track online status ── */
+  /* ── Track online status ──
+     ✅ FIX: emit request-online-users immediately on mount so we
+     get the current list without waiting for the next broadcast.
+     Previously the card subscribed but never asked, so if no
+     broadcast happened after mount it always showed offline.     */
   useEffect(() => {
     const fn = (list) => setOnlineUsers(list);
     socket.on('online-users', fn);
+    socket.emit('request-online-users'); // ← the missing line
     return () => socket.off('online-users', fn);
   }, []);
 
@@ -54,25 +58,23 @@ const UserInfoCard = ({ user, onClose }) => {
 
   const data     = profile || user;
   const isOnline = onlineUsers.includes(String(data?._id));
+  const lastSeenStr = formatLastSeen(data?.lastSeen);
 
   return (
     <>
       <style>{`
         @keyframes cardIn {
           from { opacity: 0; transform: translateX(12px) scale(.97); }
-          to   { opacity: 1; transform: translateX(0)    scale(1);   }
+          to   { opacity: 1; transform: translateX(0) scale(1); }
         }
         @keyframes avatarIn {
           from { opacity: 0; transform: scale(.85); }
-          to   { opacity: 1; transform: scale(1);   }
+          to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
 
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40" onClick={onClose} />
 
       {/* Card */}
       <div
@@ -80,16 +82,13 @@ const UserInfoCard = ({ user, onClose }) => {
                    shadow-[0_8px_40px_rgba(0,0,0,0.18)] border border-white/60"
         style={{ animation: 'cardIn .2s cubic-bezier(.22,1,.36,1)' }}
       >
-        {/* ── Banner ── */}
+        {/* Banner */}
         <div className="h-24 bg-gradient-to-br from-[#0f1117] via-[#1a1f2e] to-[#0f1117]
                         relative overflow-hidden">
-          {/* Subtle glow blobs */}
           <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full
                           bg-[#00e5a0]/20 blur-2xl pointer-events-none" />
           <div className="absolute -bottom-4 left-4 w-20 h-20 rounded-full
                           bg-[#00e5a0]/10 blur-xl pointer-events-none" />
-
-          {/* Close btn */}
           <button
             onClick={onClose}
             className="absolute top-3 right-3 w-7 h-7 rounded-xl bg-white/10
@@ -100,28 +99,22 @@ const UserInfoCard = ({ user, onClose }) => {
           </button>
         </div>
 
-        {/* ── White body ── */}
+        {/* Body */}
         <div className="bg-white px-5 pb-6">
 
-          {/* Avatar row — overlaps banner */}
+          {/* Avatar + pill */}
           <div className="flex items-end justify-between -mt-9 mb-4">
-            <div
-              className="relative"
-              style={{ animation: 'avatarIn .25s .05s cubic-bezier(.22,1,.36,1) both' }}
-            >
+            <div className="relative" style={{ animation: 'avatarIn .25s .05s cubic-bezier(.22,1,.36,1) both' }}>
               <img
                 src={getAvatar(data)}
                 alt={data?.fullName || 'User'}
-                className="w-[72px] h-[72px] rounded-2xl object-cover
-                           border-[3px] border-white shadow-lg"
+                className="w-[72px] h-[72px] rounded-2xl object-cover border-[3px] border-white shadow-lg"
               />
-              {/* Online dot on avatar */}
               <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full
                                 border-2 border-white shadow-sm
                                 ${isOnline ? 'bg-[#00e5a0]' : 'bg-gray-300'}`} />
             </div>
 
-            {/* Online / offline pill */}
             <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs
                              font-semibold border self-start mt-10
                              ${isOnline
@@ -134,7 +127,6 @@ const UserInfoCard = ({ user, onClose }) => {
           </div>
 
           {loading ? (
-            /* Skeleton */
             <div className="space-y-3 animate-pulse">
               <div className="h-5 bg-gray-100 rounded-lg w-2/3" />
               <div className="h-3 bg-gray-100 rounded-lg w-1/3" />
@@ -142,24 +134,18 @@ const UserInfoCard = ({ user, onClose }) => {
             </div>
           ) : (
             <>
-              {/* Name + username */}
-              <h3 className="text-[15px] font-bold text-gray-900
-                             font-['Syne',sans-serif] leading-tight">
+              <h3 className="text-[15px] font-bold text-gray-900 font-['Syne',sans-serif] leading-tight">
                 {data?.fullName || data?.username || 'Unknown'}
               </h3>
               {data?.username && (
                 <div className="flex items-center gap-1 mt-0.5">
                   <AtSign size={11} className="text-[#00b87a]" />
-                  <span className="text-xs text-[#00b87a] font-medium">
-                    {data.username}
-                  </span>
+                  <span className="text-xs text-[#00b87a] font-medium">{data.username}</span>
                 </div>
               )}
 
-              {/* Divider */}
               <div className="my-4 h-px bg-gray-100" />
 
-              {/* Info rows */}
               <div className="flex flex-col gap-3">
 
                 {/* Last seen */}
@@ -169,14 +155,14 @@ const UserInfoCard = ({ user, onClose }) => {
                   value={
                     isOnline
                       ? <span className="text-[#00915a] font-medium">Active now</span>
-                      : <span className="text-gray-600">
-                          {formatLastSeen(data?.lastSeen)}
-                        </span>
+                      : lastSeenStr
+                        ? <span className="text-gray-600">{lastSeenStr}</span>
+                        : <span className="text-gray-400 italic">Not available</span>
                   }
                 />
 
                 {/* Bio */}
-                {data?.bio && (
+                {data?.bio ? (
                   <InfoRow
                     icon={<MessageCircle size={13} className="text-gray-400" />}
                     label="Bio"
@@ -186,12 +172,8 @@ const UserInfoCard = ({ user, onClose }) => {
                       </span>
                     }
                   />
-                )}
-
-                {!data?.bio && (
-                  <p className="text-xs text-gray-400 italic text-center py-1">
-                    No bio yet.
-                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400 italic text-center py-1">No bio yet.</p>
                 )}
               </div>
             </>
@@ -202,17 +184,13 @@ const UserInfoCard = ({ user, onClose }) => {
   );
 };
 
-/* ── Small helper row ── */
 const InfoRow = ({ icon, label, value }) => (
   <div className="flex items-start gap-3">
-    <div className="w-6 h-6 rounded-lg bg-[#f7f8fc] flex items-center
-                    justify-center shrink-0 mt-0.5">
+    <div className="w-6 h-6 rounded-lg bg-[#f7f8fc] flex items-center justify-center shrink-0 mt-0.5">
       {icon}
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-0.5">
-        {label}
-      </p>
+      <p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold mb-0.5">{label}</p>
       <div className="text-sm">{value}</div>
     </div>
   </div>

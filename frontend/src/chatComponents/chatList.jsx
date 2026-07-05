@@ -45,20 +45,18 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
   useEffect(() => {
     const fn = (list) => setOnline(list);
     socket.on('online-users', fn);
-
-    // ✅ Request current list on mount — don't wait for next broadcast
     socket.emit('request-online-users');
-
     return () => socket.off('online-users', fn);
   }, []);
 
-  /* ── Live last message update ── */
+  /* ── Live last message + unread count update ── */
   useEffect(() => {
     const handleReceive = (newMsg) => {
       const incomingChatId = String(newMsg.chatID || newMsg.chatId || newMsg.chat);
       setChats((prev) => {
         const updated = prev.map((chat) => {
           if (String(chat._id) !== incomingChatId) return chat;
+          const isActiveChat = String(chat._id) === String(activeChatId);
           return {
             ...chat,
             lastMessage: {
@@ -66,6 +64,11 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
               createdAt: newMsg.createdAt || new Date().toISOString(),
             },
             updatedAt: new Date().toISOString(),
+            // ✅ Only increment unread count if this chat is NOT currently open
+            // If it's open, Chat.jsx will call markSeen immediately anyway
+            unreadCount: isActiveChat
+              ? 0
+              : (chat.unreadCount || 0) + 1,
           };
         });
         const idx = updated.findIndex((c) => String(c._id) === incomingChatId);
@@ -78,7 +81,19 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
     };
     socket.on('receiveMessage', handleReceive);
     return () => socket.off('receiveMessage', handleReceive);
-  }, []);
+  }, [activeChatId]);
+
+  /* ── Clear unread count when a chat is opened ── */
+  useEffect(() => {
+    if (!activeChatId) return;
+    setChats((prev) =>
+      prev.map((chat) =>
+        String(chat._id) === String(activeChatId)
+          ? { ...chat, unreadCount: 0 }
+          : chat
+      )
+    );
+  }, [activeChatId]);
 
   const filtered = chats.filter((chat) => {
     const friend = chat.participants.find((p) => p._id !== loggedInUserId);
@@ -115,7 +130,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
         </div>
       </div>
 
-      {/* Chat list */}
+      {/* List */}
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
         {loading && (
           <div className="flex flex-col gap-2 px-3 mt-2">
@@ -136,13 +151,14 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
         )}
 
         {filtered.map((chat) => {
-          const friend   = chat.participants.find((p) => p._id !== loggedInUserId);
+          const friend    = chat.participants.find((p) => p._id !== loggedInUserId);
           if (!friend) return null;
 
-          const isOnline = onlineUsers.includes(String(friend._id));
-          const isActive = chat._id === activeChatId;
-          const lastMsg  = chat.lastMessage?.text || 'No messages yet';
-          const lastTime = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);
+          const isOnline  = onlineUsers.includes(String(friend._id));
+          const isActive  = chat._id === activeChatId;
+          const lastMsg   = chat.lastMessage?.text || 'No messages yet';
+          const lastTime  = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);
+          const unread    = chat.unreadCount || 0;
 
           return (
             <button
@@ -154,6 +170,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
                             ? 'bg-[#00e5a0]/10 border border-[#00e5a0]/20'
                             : 'hover:bg-white/5 border border-transparent'}`}
             >
+              {/* Avatar with online dot */}
               <div className="relative shrink-0">
                 <img
                   src={getAvatar(friend)}
@@ -165,21 +182,37 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
                                   ${isOnline ? 'bg-[#00e5a0]' : 'bg-gray-600'}`} />
               </div>
 
+              {/* Text block */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-1">
                   <span className={`text-sm font-medium truncate
-                                    ${isActive ? 'text-white' : 'text-gray-200'}`}>
+                                    ${isActive ? 'text-white' : unread > 0 ? 'text-white' : 'text-gray-200'}`}>
                     {friend.fullName || friend.username}
                   </span>
                   <span className="text-[10px] text-gray-600 shrink-0">{lastTime}</span>
                 </div>
+
                 {friend.username && (
                   <p className="text-[11px] text-[#00e5a0]/60 truncate">@{friend.username}</p>
                 )}
-                <p className={`text-xs truncate mt-0.5
-                               ${isActive ? 'text-[#00e5a0]/70' : 'text-gray-500'}`}>
-                  {lastMsg}
-                </p>
+
+                <div className="flex items-center justify-between gap-1 mt-0.5">
+                  <p className={`text-xs truncate flex-1
+                                 ${isActive ? 'text-[#00e5a0]/70'
+                                   : unread > 0 ? 'text-gray-300 font-medium'
+                                   : 'text-gray-500'}`}>
+                    {lastMsg}
+                  </p>
+
+                  {/* ✅ Unread badge */}
+                  {unread > 0 && !isActive && (
+                    <span className="shrink-0 min-w-[18px] h-[18px] rounded-full
+                                     bg-[#00e5a0] text-[#0f1117] text-[10px] font-bold
+                                     flex items-center justify-center px-1">
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
+                </div>
               </div>
             </button>
           );
