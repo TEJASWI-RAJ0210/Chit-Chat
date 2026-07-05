@@ -27,14 +27,14 @@ const EmptyState = () => (
 
 const Chat = () => {
   const myUserId = localStorage.getItem('userId');
-  const normalizeId = (value) => (value ? String(value) : '');
+  const normalizeId = (v) => (v ? String(v) : '');
 
   const [activeChat,    setActiveChat]    = useState(null);
   const [messages,      setMessages]      = useState([]);
   const [showSearch,    setShowSearch]    = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
   const [incomingCall,  setIncomingCall]  = useState(null);
-  const [typingUser, setTypingUser] = useState("");
+  const [typingUser,    setTypingUser]    = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,29 +47,25 @@ const Chat = () => {
   /* ── Room rejoin on reconnect ── */
   useEffect(() => {
     const handleReconnect = () => {
-      if (activeChatRef.current?._id) {
-        socket.emit('joinChat', activeChatRef.current._id);
-      }
+      if (activeChatRef.current?._id) socket.emit('joinChat', activeChatRef.current._id);
       socket.emit('request-online-users');
     };
     socket.on('connect', handleReconnect);
     return () => socket.off('connect', handleReconnect);
   }, []);
 
-  // ✅ Helper: mark unseen messages in the currently open chat as seen.
-  // Called both on chat open AND whenever a new message arrives while
-  // the chat is already open — fixes the "seen tick never updates for
-  // newer messages" bug.
   const markSeen = (chatId) => {
     if (!chatId || !myUserId) return;
-    api.put(`/messages/${chatId}/seen`, { userId: myUserId }).catch((e) => {
-      console.error('Failed to mark messages as seen:', e);
-    });
+    api.put(`/messages/${chatId}/seen`, { userId: myUserId })
+      .catch((e) => console.error('Failed to mark messages as seen:', e));
   };
 
-  /* ── Fetch messages + join room + receive new messages ── */
+  /* ── Fetch messages + join room + receive ── */
   useEffect(() => {
     if (!activeChat) return;
+
+    // Clear typing state when switching chats
+    setTypingUser('');
 
     socket.emit('joinChat', activeChat._id);
 
@@ -77,30 +73,23 @@ const Chat = () => {
       try {
         const res = await api.get(`/messages/${activeChat._id}`);
         setMessages(res.data || []);
-        // Mark everything currently unseen as seen on open
         markSeen(activeChat._id);
       } catch (err) {
         console.error(err);
         setMessages([]);
       }
     };
-
     loadChat();
 
     const handleReceive = (newMsg) => {
-      const incomingId = String(newMsg.chatID || newMsg.chatId || newMsg.chat || '');
-      if (incomingId !== String(activeChat._id)) return;
-
+      const incomingId = normalizeId(newMsg.chatID || newMsg.chatId || newMsg.chat);
+      if (incomingId !== normalizeId(activeChat._id)) return;
       setMessages((prev) => {
         if (prev.some((m) => m._id === newMsg._id)) return prev;
         return [...prev, newMsg];
       });
-
-      // ✅ FIX 3: if this new message is from the OTHER person and we
-      // already have this chat open, mark it seen immediately instead
-      // of waiting for the next time the chat is opened.
-      const senderId = String(newMsg.senderID?._id || newMsg.senderID || '');
-      if (senderId && senderId !== String(myUserId)) {
+      const senderId = normalizeId(newMsg.senderID?._id || newMsg.senderID);
+      if (senderId && senderId !== normalizeId(myUserId)) {
         markSeen(activeChat._id);
       }
     };
@@ -109,69 +98,54 @@ const Chat = () => {
     return () => socket.off('receiveMessage', handleReceive);
   }, [activeChat, myUserId]);
 
-  /* ── Listen for seen receipts ── */
+  /* ── Seen receipts ── */
   useEffect(() => {
     const handleMessagesSeen = ({ chatId, messageIds = [] }) => {
       if (normalizeId(chatId) !== normalizeId(activeChat?._id)) return;
-
-      const seenIds = new Set(messageIds.map((id) => normalizeId(id)));
+      const seenIds = new Set(messageIds.map(normalizeId));
       setMessages((prev) =>
-        prev.map((msg) =>
-          seenIds.has(normalizeId(msg._id)) ? { ...msg, isSeen: true } : msg
-        )
+        prev.map((msg) => seenIds.has(normalizeId(msg._id)) ? { ...msg, isSeen: true } : msg)
       );
     };
-
     socket.on('messages-seen', handleMessagesSeen);
     return () => socket.off('messages-seen', handleMessagesSeen);
   }, [activeChat]);
 
+  /* ── Typing indicator ──
+     ✅ FIX: activeChat is in the dep array so the handlers always
+     see the current chat ID. Previously [] caused a stale closure
+     where activeChat was always null → condition always failed →
+     setTypingUser never called.                                    */
+  useEffect(() => {
+    const handleTyping = ({ senderName, chatID }) => {
+      // ✅ FIX: String() on both sides — strict === fails when types differ
+      if (String(chatID) !== String(activeChat?._id)) return;
+      setTypingUser(senderName);
+    };
+
+    const handleStopTyping = ({ chatID }) => {
+      if (String(chatID) !== String(activeChat?._id)) return;
+      setTypingUser('');
+    };
+
+    socket.on('user-typing',      handleTyping);
+    socket.on('user-stop-typing', handleStopTyping);
+
+    return () => {
+      socket.off('user-typing',      handleTyping);
+      socket.off('user-stop-typing', handleStopTyping);
+    };
+  }, [activeChat]); // ✅ re-register whenever active chat changes
+
   /* ── Incoming calls ── */
   useEffect(() => {
-    const handleIncomingCall = (data) => setIncomingCall(data);
-    socket.on('incoming-call', handleIncomingCall);
-    return () => socket.off('incoming-call', handleIncomingCall);
+    const fn = (data) => setIncomingCall(data);
+    socket.on('incoming-call', fn);
+    return () => socket.off('incoming-call', fn);
   }, []);
 
-  useEffect(() => {
-
-  const handleTyping = ({ senderName, chatID }) => {
-    if (String(chatID) !== String(activeChat?._id))
-        return;
-    setTypingUser(senderName);
-  };
-
-  const handleStopTyping = ({ chatID }) => {
-    if (String(chatID) !== String(activeChat?._id))
-        return;
-    setTypingUser("");
-  };
-
-  socket.on(
-    "user-typing",
-    handleTyping
-  );
-
-  socket.on(
-    "user-stop-typing",
-    handleStopTyping
-  );
-
-  return () => {
-
-    socket.off(
-      "user-typing",
-      handleTyping
-    );
-
-    socket.off(
-      "user-stop-typing",
-      handleStopTyping
-    );
-
-  };
-
-}, [activeChat?._id]);
+  const targetUserId = activeChat?.participants
+    ?.find((u) => normalizeId(u._id) !== normalizeId(myUserId))?._id;
 
   return (
     <>
@@ -213,9 +187,7 @@ const Chat = () => {
             />
             <MessageInput
               chatId={activeChat._id}
-              targetUserId={
-                activeChat.participants.find((u) => String(u._id) !== String(myUserId))?._id
-             }
+              targetUserId={targetUserId}
             />
           </div>
         ) : (
@@ -225,26 +197,23 @@ const Chat = () => {
 
       {incomingCall && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-96">
-            <h2 className="text-xl font-bold">Incoming Video Call</h2>
-            <p className="mt-3">Someone is calling you...</p>
+          <div className="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+            <h2 className="text-xl font-bold font-['Syne',sans-serif]">Incoming Video Call</h2>
+            <p className="mt-3 text-gray-500 text-sm">Someone is calling you...</p>
             <div className="flex gap-4 mt-6">
               <button
                 onClick={() => {
-                  socket.emit('accept-call', {
-                    callerId: incomingCall.callerId,
-                    receiverId: myUserId,
-                  });
+                  socket.emit('accept-call', { callerId: incomingCall.callerId, receiverId: myUserId });
                   navigate(`/video-call/${incomingCall.callerId}`);
                   setIncomingCall(null);
                 }}
-                className="flex-1 bg-green-500 text-white py-2 rounded-lg"
+                className="flex-1 bg-green-500 text-white py-2.5 rounded-xl font-medium hover:bg-green-600 transition-colors"
               >
                 Accept
               </button>
               <button
                 onClick={() => setIncomingCall(null)}
-                className="flex-1 bg-red-500 text-white py-2 rounded-lg"
+                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-medium hover:bg-red-600 transition-colors"
               >
                 Reject
               </button>
