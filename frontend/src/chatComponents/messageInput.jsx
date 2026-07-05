@@ -271,6 +271,10 @@ const MessageInput = ({ chatId, overrideOnSend,targetUserId}) => {
               if (!targetUserId) return;
 
               if (!isTypingRef.current) {
+               console.log("🚀 EMITTING TYPING");
+               console.log("Socket Connected:", socket.connected);
+               console.log("Target User:", targetUserId);
+               console.log("Chat:", chatId);
                socket.emit("typing", {
                  targetUserId,
                  senderName: localStorage.getItem("username"),

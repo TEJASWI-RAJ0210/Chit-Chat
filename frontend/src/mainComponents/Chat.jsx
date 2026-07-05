@@ -136,13 +136,13 @@ const Chat = () => {
   useEffect(() => {
 
   const handleTyping = ({ senderName, chatID }) => {
-    if (chatID !== activeChat?._id)
+    if (String(chatID) !== String(activeChat?._id))
         return;
     setTypingUser(senderName);
   };
 
   const handleStopTyping = ({ chatID }) => {
-    if (chatID !== activeChat?._id)
+    if (String(chatID) !== String(activeChat?._id))
         return;
     setTypingUser("");
   };
@@ -171,7 +171,7 @@ const Chat = () => {
 
   };
 
-}, []);
+}, [activeChat?._id]);
 
   return (
     <>
