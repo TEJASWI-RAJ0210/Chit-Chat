@@ -47,6 +47,10 @@ const onlineUsers = new Map();
 app.set("onlineUsers", onlineUsers);
 
 io.on("connection", (socket) => {
+    socket.onAny((event, ...args) => {
+    console.log("📡 EVENT:", event);
+    console.log(args);
+  });
   console.log("✅ Socket connected:", socket.id);
 
   socket.on("user-online", (userId) => {
@@ -104,6 +108,7 @@ io.on("connection", (socket) => {
     }
 
 });
+
 
   socket.on("call-user", ({ targetUserId, callerId }) => {
     const targetSocketId = onlineUsers.get(String(targetUserId));
