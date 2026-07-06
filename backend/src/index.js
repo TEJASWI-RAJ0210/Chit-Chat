@@ -6,6 +6,7 @@ import authRouter from './routes/Auth.route.js';
 import { app } from "./app.js"
 import express from "express";
 import User from "./models/user.model.js";
+import fs from "fs";
 
 // dotenv.config calls removed as they are now in env.js
 import http from "http";
@@ -13,6 +14,10 @@ import { Server } from "socket.io";
 import chatRoutes from "./routes/chat.route.js";
 import messageRoutes from "./routes/message.route.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+dotenv.config();
+if (!fs.existsSync("./public/temp")) {
+  fs.mkdirSync("./public/temp", { recursive: true });
+}
 
 
 connectDB()
@@ -99,6 +104,35 @@ socket.on("stop-typing", ({ targetUserId, chatID }) => {
     });
   }
 });
+
+socket.on("call-user", ({ targetUserId, callerId }) => {
+    const targetSocketId = onlineUsers.get(String(targetUserId));
+    if (targetSocketId) {
+      io.to(targetSocketId).emit("incoming-call", { callerId, targetUserId });
+    }
+  });
+
+  socket.on("accept-call", ({ callerId, receiverId }) => {
+    const callerSocketId = onlineUsers.get(String(callerId));
+    if (callerSocketId) {
+      io.to(callerSocketId).emit("call-accepted", { receiverId });
+    }
+  });
+
+  socket.on("offer", ({ targetUserId, offer }) => {
+    const target = onlineUsers.get(String(targetUserId));
+    if (target) io.to(target).emit("offer", offer);
+  });
+
+  socket.on("answer", ({ targetUserId, answer }) => {
+    const target = onlineUsers.get(String(targetUserId));
+    if (target) io.to(target).emit("answer", answer);
+  });
+
+  socket.on("ice-candidate", ({ targetUserId, candidate }) => {
+    const target = onlineUsers.get(String(targetUserId));
+    if (target) io.to(target).emit("ice-candidate", candidate);
+  });
 
   /* Send message */
   // socket.on("sendMessage", async ({ chatID, senderID, text }) => {
