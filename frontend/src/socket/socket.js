@@ -1,6 +1,14 @@
 import { io } from "socket.io-client";
 
-const socket = io("https://chit-chat-2-i63p.onrender.com", {
+// const socket = io("https://chit-chat-2-i63p.onrender.com", {
+//   withCredentials: true,
+//   transports: ["websocket"],
+//   reconnection: true,
+//   reconnectionAttempts: Infinity,
+//   reconnectionDelay: 1000,
+//   reconnectionDelayMax: 5000,
+// });
+const socket = io("http://localhost:5000", {
   withCredentials: true,
   transports: ["websocket"],
   reconnection: true,

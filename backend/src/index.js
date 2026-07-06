@@ -81,6 +81,25 @@ io.on("connection", (socket) => {
     console.log(`User joined chat ${chatID}`);
   });
 
+  /* Typing indicator */
+socket.on("typing", ({ targetUserId, senderName, chatID }) => {
+  const targetSockets = onlineUsers.get(String(targetUserId));
+  if (targetSockets) {
+    targetSockets.forEach((socketId) => {
+      io.to(socketId).emit("user-typing", { senderName, chatID });
+    });
+  }
+});
+
+socket.on("stop-typing", ({ targetUserId, chatID }) => {
+  const targetSockets = onlineUsers.get(String(targetUserId));
+  if (targetSockets) {
+    targetSockets.forEach((socketId) => {
+      io.to(socketId).emit("user-stop-typing", { chatID });
+    });
+  }
+});
+
   /* Send message */
   // socket.on("sendMessage", async ({ chatID, senderID, text }) => {
   //   const message = { chatID, senderID, text };
