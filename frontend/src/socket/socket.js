@@ -9,6 +9,7 @@ const socket = io("https://chit-chat-2-i63p.onrender.com", {
   reconnectionDelayMax: 5000,
 });
 
+
 let activeUserId = null;
 
 export const setSocketUser = (userId) => {
