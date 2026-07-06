@@ -68,46 +68,20 @@ io.on("connection", (socket) => {
     console.log(`Joined chat: ${chatID}`);
   });
 
-  socket.on(
-  "typing",
-  ({ targetUserId, senderName,chatID }) => {
-
-    const targetSocket =
-      onlineUsers.get(targetUserId);
-
-    if (targetSocket) {
-
-      io.to(targetSocket).emit(
-        "user-typing",
-        {
-          senderName,
-          chatID
-        }
-      );
-
-    }
-
+  socket.on("typing", ({ targetUserId, senderName, chatID }) => {
+  const targetSocket = onlineUsers.get(String(targetUserId)); // ✅ add String()
+  if (targetSocket) {
+    io.to(targetSocket).emit("user-typing", { senderName, chatID });
+  }
 });
   
-  socket.on(
-  "stop-typing",
-  ({ targetUserId, chatID }) => {
-
-    const targetSocket =
-      onlineUsers.get(targetUserId);
-
-    if (targetSocket) {
-
-      io.to(targetSocket).emit(
-        "user-stop-typing",
-        {
-          chatID
-        }
-      );
-
-    }
-
+ socket.on("stop-typing", ({ targetUserId, chatID }) => {
+  const targetSocket = onlineUsers.get(String(targetUserId)); // ✅ add String()
+  if (targetSocket) {
+    io.to(targetSocket).emit("user-stop-typing", { chatID });
+  }
 });
+
 
 
   socket.on("call-user", ({ targetUserId, callerId }) => {
