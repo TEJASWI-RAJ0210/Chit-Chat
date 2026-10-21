@@ -67,7 +67,7 @@ const SignUp = () => {
         JSON.stringify(res.data.user)
       );
 
-      navigate("/chat");
+      navigate(res.data.user?.username ? "/chat" : "/UserName");
     } catch (error) {
       console.error(
         "Google Login Error:",

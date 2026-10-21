@@ -54,6 +54,7 @@ const MessageInput = ({ chatId, overrideOnSend, targetUserId }) => {
   const [file,      setFile]      = useState(null);
   const [uploadPct, setUploadPct] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   const pickerRef       = useRef(null);
   const inputRef        = useRef(null);
@@ -123,12 +124,15 @@ const MessageInput = ({ chatId, overrideOnSend, targetUserId }) => {
     formData.append('file', fileToUpload);
     setUploading(true);
     setUploadPct(0);
-    const res = await api.post('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (e) => setUploadPct(Math.round((e.loaded * 100) / e.total)),
-    });
-    setUploading(false);
-    return res.data;
+    try {
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (e) => setUploadPct(Math.round((e.loaded * 100) / e.total)),
+      });
+      return res.data;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSend = async (e) => {
@@ -139,33 +143,41 @@ const MessageInput = ({ chatId, overrideOnSend, targetUserId }) => {
 
     setShowEmoji(false);
     setSending(true);
+    setSendError("");
+    const submittedMessage = message;
+    const submittedFile = file;
+    let sent = false;
 
     try {
       if (typeof overrideOnSend === 'function') {
-        await overrideOnSend(message);
-      } else if (hasFile) {
-        const uploaded = await uploadFile(file);
+        await overrideOnSend(submittedMessage);
+      } else if (submittedFile) {
+        const uploaded = await uploadFile(submittedFile);
         await api.post('/messages', {
           chatID:      chatId,
           senderID:    localStorage.getItem('userId'),
-          text:        message || '',
+          text:        submittedMessage || '',
           fileUrl:     uploaded.url,
-          fileName:    file.name,
+          fileName:    submittedFile.name,
           fileType:    uploaded.resourceType,
-          messageType: getMessageType(file),
+          messageType: getMessageType(submittedFile),
         });
-        setFile(null);
+        setFile((current) => current === submittedFile ? null : current);
       } else {
-        await sendMessage(chatId, message);
+        await sendMessage(chatId, submittedMessage);
       }
+      sent = true;
     } catch (err) {
       console.error('Send failed:', err);
+      setSendError(err?.message || 'Message could not be sent. Please try again.');
     } finally {
       // ✅ FIX: was `chatId` (lowercase) before — server receives `chatID`
       // so it got undefined and never cleared the typing indicator
       emitStopTyping();
       clearTimeout(typingTimeoutRef.current);
-      setMessage('');
+      if (sent) {
+        setMessage((current) => current === submittedMessage ? '' : current);
+      }
       setSending(false);
       setUploadPct(0);
       inputRef.current?.focus();
@@ -238,6 +250,11 @@ const MessageInput = ({ chatId, overrideOnSend, targetUserId }) => {
       )}
 
       <div className="px-5 py-4">
+        {sendError && (
+          <p role="status" className="mb-2 text-xs text-red-500">
+            {sendError} Your draft is still here.
+          </p>
+        )}
         <div className={`flex items-center gap-2 bg-[#f7f8fc] border rounded-2xl
                           px-4 py-2.5 transition-all
                           ${showEmoji
