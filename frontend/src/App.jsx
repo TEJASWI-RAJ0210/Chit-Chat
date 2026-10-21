@@ -1,16 +1,14 @@
 import React from "react";
-import SignUp from "./mainComponents/signUp.jsx";
+import SignUp from "./pages/auth/SignUp.jsx";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import UserName from "./mainComponents/UserName.jsx";
-import SignIn from "./mainComponents/SignIn.jsx";
-import SettingsPage from "./chatComponents/Settings.jsx";
-import Chat from "./mainComponents/Chat.jsx";
-import ChatAiPage from "./mainComponents/ChatAiPage.jsx";
-import SearchFriendPage from "./mainComponents/SearchFriendPage.jsx";
-import VideoCall from "./mainComponents/VideoCall.jsx";
+import UserName from "./pages/auth/UserName.jsx";
+import SignIn from "./pages/auth/SignIn.jsx";
+import SettingsPage from "./pages/chat/Settings.jsx";
+import Chat from "./pages/chat/Chat.jsx";
+import ChatAiPage from "./pages/chat/ChatAiPage.jsx";
+import SearchFriendPage from "./pages/chat/SearchFriendPage.jsx";
+import VideoCall from "./pages/chat/VideoCall.jsx";
 
-import socket from "./socket/socket.js";
-import { useEffect } from "react";
 const App = () => {
   // useEffect(() => {
   //   socket.connect();
