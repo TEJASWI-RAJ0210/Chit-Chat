@@ -9,9 +9,9 @@ const CallManager = () => {
   useEffect(() => {
     setSocketUser(localStorage.getItem("userId"));
     const handleIncomingCall = (call) => setIncomingCall(call);
-    const handleCallAccepted = ({ receiverId, callId, chatId }) => {
+    const handleCallAccepted = ({ receiverId, receiverName, callId, chatId }) => {
       navigate(`/video-call/${receiverId}`, {
-        state: { role: "caller", callId, chatId },
+        state: { role: "caller", callId, chatId, peerName: receiverName },
       });
     };
     const handleCallCancelled = ({ callId }) => {
@@ -37,7 +37,12 @@ const CallManager = () => {
       chatId: incomingCall.chatId,
     });
     navigate(`/video-call/${incomingCall.callerId}`, {
-      state: { role: "callee", callId: incomingCall.callId, chatId: incomingCall.chatId },
+      state: {
+        role: "callee",
+        callId: incomingCall.callId,
+        chatId: incomingCall.chatId,
+        peerName: incomingCall.callerName,
+      },
     });
     setIncomingCall(null);
   };

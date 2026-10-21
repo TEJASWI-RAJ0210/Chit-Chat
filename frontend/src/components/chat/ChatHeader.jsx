@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Video, Phone, MoreVertical, Search, Info, X } from 'lucide-react';
+import { Video, Phone, MoreVertical, Search, Info, X, PhoneOff, LoaderCircle } from 'lucide-react';
 import socket from '../../socket/socket.js';
 import UserInfoCard from './UserInfoCard.jsx';
 
@@ -15,6 +15,8 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
   const [searchQuery, setSearchQuery] = useState('');
   const [matchIndex,  setMatchIndex]  = useState(0);
   const [matches,     setMatches]     = useState([]);
+  const [outgoingCall, setOutgoingCall] = useState(null);
+  const [callNotice, setCallNotice] = useState("");
   const searchRef = useRef(null);
   const menuRef   = useRef(null);
 
@@ -72,30 +74,65 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
   const closeSearch = () => { setShowSearch(false); onSearchResult?.(null); };
 
   useEffect(() => {
-  const handleCallFailed = ({ reason }) => {
-    window.alert(reason === 'offline' ? 'This person is offline.' : 'Unable to start the call. Please try again.');
-  };
+    let noticeTimer;
+    const showNotice = (message) => {
+      setCallNotice(message);
+      window.clearTimeout(noticeTimer);
+      noticeTimer = window.setTimeout(() => setCallNotice(""), 4500);
+    };
+    const handleCallFailed = ({ callId, reason }) => {
+      setOutgoingCall((current) => current?.callId === callId ? null : current);
+      const message = reason === "offline"
+        ? "This person is offline."
+        : reason === "timeout"
+          ? "No answer. You can try again."
+          : "Unable to start the call. Please try again.";
+      showNotice(message);
+    };
+    const handleCallRejected = ({ callId }) => {
+      setOutgoingCall((current) => current?.callId === callId ? null : current);
+      showNotice("The call was declined.");
+    };
+    const handleCallAccepted = ({ callId }) => {
+      setOutgoingCall((current) => current?.callId === callId ? null : current);
+    };
 
-  const handleCallRejected = () => window.alert('The call was declined.');
-
-  socket.on("call-failed", handleCallFailed);
-  socket.on("call-rejected", handleCallRejected);
-
-  return () => {
-    socket.off("call-failed", handleCallFailed);
-    socket.off("call-rejected", handleCallRejected);
-  };
-}, []);
+    socket.on("call-failed", handleCallFailed);
+    socket.on("call-rejected", handleCallRejected);
+    socket.on("call-accepted", handleCallAccepted);
+    return () => {
+      window.clearTimeout(noticeTimer);
+      socket.off("call-failed", handleCallFailed);
+      socket.off("call-rejected", handleCallRejected);
+      socket.off("call-accepted", handleCallAccepted);
+    };
+  }, []);
 
   const handleVideoCall = () => {
-  if (!otherUser?._id) return;
-  const callId = crypto.randomUUID();
-  socket.emit("call-user", {
-    targetUserId: otherUser._id,
-    callId,
-    chatId: chat._id,
-  });
-};
+    if (!otherUser?._id || outgoingCall) return;
+    if (!socket.connected) {
+      setCallNotice("Reconnecting to the call service. Please try again in a moment.");
+      return;
+    }
+    const callId = crypto.randomUUID();
+    setCallNotice("");
+    setOutgoingCall({
+      callId,
+      name: otherUser.fullName || otherUser.username || "your contact",
+      avatar: getAvatar(otherUser),
+    });
+    socket.emit("call-user", {
+      targetUserId: otherUser._id,
+      callId,
+      chatId: chat._id,
+    });
+  };
+
+  const cancelOutgoingCall = () => {
+    if (!outgoingCall) return;
+    socket.emit("cancel-call", { callId: outgoingCall.callId });
+    setOutgoingCall(null);
+  };
   return (
     <>
       <div className="shrink-0 flex items-center gap-3 px-5 py-3.5
@@ -200,6 +237,36 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
 
       {showInfo && (
         <UserInfoCard user={otherUser} onClose={() => setShowInfo(false)} />
+      )}
+
+      {outgoingCall && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0f1117]/55 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="outgoing-call-title">
+          <div className="w-full max-w-sm overflow-hidden rounded-3xl border border-white/10 bg-[#141820] text-white shadow-2xl">
+            <div className="h-1 bg-gradient-to-r from-[#00b87a] via-[#00e5a0] to-[#00b87a]" />
+            <div className="flex flex-col items-center px-7 pb-7 pt-8 text-center">
+              <div className="relative mb-5">
+                <span className="absolute -inset-3 rounded-full border border-[#00e5a0]/25 animate-ping" />
+                <img src={outgoingCall.avatar} alt="" className="relative h-24 w-24 rounded-full border-2 border-[#00e5a0]/70 object-cover shadow-[0_0_35px_rgba(0,229,160,.18)]" />
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#00e5a0]">Video call</p>
+              <h2 id="outgoing-call-title" className="mt-2 font-['Syne',sans-serif] text-xl font-bold">Calling {outgoingCall.name}</h2>
+              <div className="mt-3 flex items-center gap-2 text-sm text-white/55">
+                <LoaderCircle size={15} className="animate-spin text-[#00e5a0]" />
+                <span>Waiting for them to answer…</span>
+              </div>
+              <button type="button" onClick={cancelOutgoingCall} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#e94258] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d83349]">
+                <PhoneOff size={17} />
+                Cancel call
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {callNotice && (
+        <div role="status" className="fixed bottom-5 left-1/2 z-[110] -translate-x-1/2 rounded-xl border border-white/10 bg-[#171a22] px-4 py-3 text-sm text-white shadow-xl">
+          {callNotice}
+        </div>
       )}
     </>
   );
