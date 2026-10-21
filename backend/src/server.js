@@ -56,6 +56,25 @@ const getPeerSocketIds = (userId) => onlineUsers.get(String(userId)) || new Set(
 const emitToUser = (userId, event, payload) => {
   for (const socketId of getPeerSocketIds(userId)) io.to(socketId).emit(event, payload);
 };
+const getChatPeerIds = async (userId) => {
+  const chats = await Chat.find({ participants: userId }).select("participants").lean();
+  return new Set(
+    chats.flatMap((chat) => chat.participants.map(String)).filter((id) => id !== String(userId))
+  );
+};
+const emitOnlineUsers = async (userId) => {
+  const peers = await getChatPeerIds(userId);
+  emitToUser(userId, "online-users", Array.from(peers).filter((id) => onlineUsers.has(id)));
+};
+const refreshPresenceFor = async (userId) => {
+  try {
+    await emitOnlineUsers(userId);
+    const peers = await getChatPeerIds(userId);
+    await Promise.all(Array.from(peers, (peerId) => emitOnlineUsers(peerId)));
+  } catch (error) {
+    console.error("Failed to update online presence:", error.message);
+  }
+};
 const isChatPeerPair = async (chatId, userId, peerId) => {
   if (!chatId || !userId || !peerId) return false;
   return Boolean(await Chat.exists({
@@ -68,18 +87,22 @@ const isChatPeerPair = async (chatId, userId, peerId) => {
 app.set('io', io);
 app.set('onlineUsers', onlineUsers);
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
   console.log("✅ Socket connected:", socket.id);
 
   const userId = socket.data.userId;
   const userSockets = onlineUsers.get(userId) || new Set();
   userSockets.add(socket.id);
   onlineUsers.set(userId, userSockets);
-  io.emit("online-users", Array.from(onlineUsers.keys()));
+  await refreshPresenceFor(userId);
   console.log(`👤 User online: ${userId} (${socket.id})`);
 
-  socket.on("request-online-users", () => {
-    socket.emit("online-users", Array.from(onlineUsers.keys()));
+  socket.on("request-online-users", async () => {
+    try {
+      await emitOnlineUsers(userId);
+    } catch (error) {
+      console.error("Failed to load online presence:", error.message);
+    }
   });
 
   /* Join chat room */
@@ -125,12 +148,24 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("accept-call", ({ callerId, callId, chatId }) => {
+  socket.on("accept-call", async ({ callerId, callId, chatId }) => {
     const call = activeCalls.get(String(callId));
     if (!call || call.callerId !== String(callerId) || call.calleeId !== userId || call.chatId !== String(chatId)) return;
     clearTimeout(call.timeout);
     call.accepted = true;
-    emitToUser(call.callerId, "call-accepted", { receiverId: userId, callId, chatId: call.chatId });
+    let receiverName = "ChitChat contact";
+    try {
+      const receiver = await User.findById(userId).select("fullName username");
+      receiverName = receiver?.fullName || receiver?.username || receiverName;
+    } catch (error) {
+      console.error("Could not load call participant name:", error.message);
+    }
+    emitToUser(call.callerId, "call-accepted", {
+      receiverId: userId,
+      receiverName,
+      callId,
+      chatId: call.chatId,
+    });
   });
 
   socket.on("call-ready", ({ callId }) => {
@@ -149,6 +184,14 @@ io.on("connection", (socket) => {
     clearTimeout(call.timeout);
     activeCalls.delete(String(callId));
     emitToUser(call.callerId, "call-rejected", { callId });
+  });
+
+  socket.on("cancel-call", ({ callId }) => {
+    const call = activeCalls.get(String(callId));
+    if (!call || call.callerId !== userId || call.accepted) return;
+    clearTimeout(call.timeout);
+    activeCalls.delete(String(callId));
+    emitToUser(call.calleeId, "call-cancelled", { callId });
   });
 
   const relayCallSignal = async (event, payload, signalName) => {
@@ -234,7 +277,7 @@ io.on("connection", (socket) => {
       }
     }
 
-    io.emit("online-users", Array.from(onlineUsers.keys()));
+    if (disconnectedUserId) await refreshPresenceFor(disconnectedUserId);
     console.log(" Socket disconnected:", socket.id);
   });
 });
