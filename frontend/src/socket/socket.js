@@ -1,6 +1,12 @@
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", {
+const socketUrl = import.meta.env.VITE_SOCKET_URL;
+
+if (!socketUrl) {
+  throw new Error("VITE_SOCKET_URL is missing. Set it in the frontend environment.");
+}
+
+const socket = io(socketUrl, {
   withCredentials: true,
   autoConnect: false,
   auth: { token: localStorage.getItem("token") || "" },

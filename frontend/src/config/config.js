@@ -1,1 +1,5 @@
-export const API_URL = 'http://localhost:5000/api';
+export const API_URL = import.meta.env.VITE_API_URL;
+
+if (!API_URL) {
+  throw new Error("VITE_API_URL is missing. Set it in the frontend environment.");
+}
