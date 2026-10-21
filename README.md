@@ -1,15 +1,6 @@
 # 💬 ChitChat
 
-<p align="center">
-  <img src="./assets/logo.png" alt="ChitChat Logo" width="150"/>
-
 **A modern real-time chat application powered by the MERN stack, Socket.IO, and Groq AI.**
-
-</p>
-
-<p align="center">
-  <a href="YOUR_LIVE_DEMO_LINK">🌐 Live Demo</a> 
-</p>
 
 ---
 
@@ -80,14 +71,27 @@ ChitChat/
 │
 ├── frontend/
 │   ├── src/
-│   ├── public/
+│   │   ├── components/       # Reusable chat and navigation UI
+│   │   ├── pages/            # Authentication and application pages
+│   │   ├── services/         # API client
+│   │   ├── socket/           # Socket.IO client
+│   │   ├── config/           # Frontend configuration
+│   │   └── assets/           # Used visual assets
 │   ├── package.json
 │   └── vite.config.js
 │
 ├── backend/
 │   ├── src/
+│   │   ├── config/           # Database and app constants
+│   │   ├── controllers/
+│   │   ├── middlewares/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── app.js
+│   │   └── server.js         # Single application entry point
 │   ├── package.json
-│   └── server.js
+│   └── public/
 │
 └── README.md
 ```
@@ -172,40 +176,6 @@ and the backend at:
 ```text
 http://localhost:5000
 ```
-
----
-
-## 📸 Screenshots
-
-### 🏠 Home Page
-
-> *Screenshot Placeholder*
-
-![Home](./assets/screenshots/home-placeholder.png)
-
----
-
-### 💬 Chat Interface
-
-> *Screenshot Placeholder*
-
-![Chat](./assets/screenshots/chat-placeholder.png)
-
----
-
-### 🤖 AI Chatbot
-
-> *Screenshot Placeholder*
-
-![AI](./assets/screenshots/ai-placeholder.png)
-
----
-
-### 🔐 Authentication
-
-> *Screenshot Placeholder*
-
-![Auth](./assets/screenshots/auth-placeholder.png)
 
 ---
 

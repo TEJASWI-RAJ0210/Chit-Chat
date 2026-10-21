@@ -1,17 +1,38 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import { OAuth2Client } from "google-auth-library";
+
+const googleClient = new OAuth2Client();
 
 export const googleLogin = async (req, res) => {
   try {
-    const { name, email, picture } = req.body;
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      return res.status(400).json({ message: "Google access token is required" });
+    }
+
+    // Validate the token with Google, then obtain account details from Google
+    // itself. Never trust identity fields supplied by the browser.
+    await googleClient.getTokenInfo(accessToken);
+    const profileResponse = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!profileResponse.ok) {
+      return res.status(401).json({ message: "Invalid Google access token" });
+    }
+    const profile = await profileResponse.json();
+    const email = (profile.email || "").toLowerCase();
+    if (!email || profile.verified_email !== true) {
+      return res.status(401).json({ message: "Google account email is not verified" });
+    }
 
     let user = await User.findOne({ email });
 
     if (!user) {
       user = await User.create({
-        fullName: name,
+        fullName: profile.name,
         email,
-        profilePic: picture,
+        profilePic: profile.picture,
         password: "google-user",
       });
     }

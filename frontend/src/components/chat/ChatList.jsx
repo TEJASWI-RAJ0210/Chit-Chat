@@ -1,0 +1,257 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { getChats } from '../../services/api.js';
+import socket from '../../socket/socket.js';
+import { FiSearch, FiEdit, FiSettings } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+
+const getAvatar = (user) =>
+  user?.profilePic ||
+  `https://api.dicebear.com/7.x/thumbs/svg?seed=${user?._id || 'default'}`;
+
+const formatTime = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffDays = Math.floor((now - d) / 86400000);
+  if (diffDays === 0) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return d.toLocaleDateString([], { weekday: 'short' });
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+const ChatList = ({ onSelectChat, activeChatId }) => {
+  const [chats,       setChats]   = useState([]);
+  const [loading,     setLoading] = useState(true);
+  const [onlineUsers, setOnline]  = useState([]);
+  const [search,      setSearch]  = useState('');
+  const loggedInUserId = localStorage.getItem('userId');
+  const navigate = useNavigate();
+
+  const fetchChats = useCallback(async () => {
+    if (!loggedInUserId) return;
+    try {
+      const res = await getChats(loggedInUserId);
+      setChats(res.data);
+    } catch (err) {
+      console.error('Failed to fetch chats', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [loggedInUserId]);
+
+  useEffect(() => { fetchChats(); }, [fetchChats]);
+
+  /* ── Online users ── */
+  useEffect(() => {
+    const fn = (list) => setOnline(list);
+    socket.on('online-users', fn);
+    socket.emit('request-online-users');
+    return () => socket.off('online-users', fn);
+  }, []);
+
+  /* ── Live last message + unread count update ── */
+  useEffect(() => {
+    const handleReceive = (newMsg) => {
+      const incomingChatId = String(newMsg.chatID || newMsg.chatId || newMsg.chat);
+      const senderId = String(newMsg.senderID?._id || newMsg.senderID || '');
+      const sentByMe = senderId === String(loggedInUserId);
+      setChats((prev) => {
+        const updated = prev.map((chat) => {
+          if (String(chat._id) !== incomingChatId) return chat;
+          const isActiveChat = String(chat._id) === String(activeChatId);
+          return {
+            ...chat,
+            lastMessage: {
+              text: newMsg.text || newMsg.content || '',
+              createdAt: newMsg.createdAt || new Date().toISOString(),
+            },
+            updatedAt: new Date().toISOString(),
+            // ✅ Only increment unread count if this chat is NOT currently open
+            // If it's open, Chat.jsx will call markSeen immediately anyway
+            unreadCount: isActiveChat
+              ? 0
+              : sentByMe
+                ? (chat.unreadCount || 0)
+                : (chat.unreadCount || 0) + 1,
+          };
+        });
+        const idx = updated.findIndex((c) => String(c._id) === incomingChatId);
+        if (idx > 0) {
+          const [moved] = updated.splice(idx, 1);
+          return [moved, ...updated];
+        }
+        return updated;
+      });
+    };
+    socket.on('receiveMessage', handleReceive);
+    return () => socket.off('receiveMessage', handleReceive);
+  }, [activeChatId]);
+
+  /* ── Clear unread count when a chat is opened ── */
+  useEffect(() => {
+    if (!activeChatId) return;
+    setChats((prev) =>
+      prev.map((chat) =>
+        String(chat._id) === String(activeChatId)
+          ? { ...chat, unreadCount: 0 }
+          : chat
+      )
+    );
+  }, [activeChatId]);
+
+  const filtered = chats.filter((chat) => {
+    const friend = chat.participants.find((p) => String(p._id) !== String(loggedInUserId));
+    const name   = `${friend?.fullName || ''} ${friend?.username || ''}`.toLowerCase();
+    return name.includes(search.toLowerCase());
+  });
+
+  return (
+    <div className="w-[280px] h-full bg-[#15181f] border-r border-white/[0.06]
+                    flex flex-col overflow-hidden shrink-0">
+
+      {/* Header */}
+      <div className="px-5 pt-6 pb-4 shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-white font-['Syne',sans-serif] font-semibold text-lg tracking-tight">
+            Messages
+          </h2>
+          <button className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center
+                             justify-center text-gray-400 hover:text-white transition-colors">
+            <FiEdit size={14} />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 bg-white/5 border border-white/[0.08]
+                        rounded-xl px-3 py-2 focus-within:border-[#00e5a0]/40 transition-colors">
+          <FiSearch size={13} className="text-gray-500 shrink-0" />
+          <input
+            type="text"
+            placeholder="Search name or username…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent text-xs text-white placeholder-gray-600 outline-none flex-1"
+          />
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
+        {loading && (
+          <div className="flex flex-col gap-2 px-3 mt-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-3 p-2 animate-pulse">
+                <div className="w-10 h-10 rounded-2xl bg-white/5 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-white/5 rounded w-3/4" />
+                  <div className="h-2 bg-white/5 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
+          <p className="text-xs text-gray-600 text-center mt-8">No conversations found</p>
+        )}
+
+        {filtered.map((chat) => {
+          const friend    = chat.participants.find((p) => String(p._id) !== String(loggedInUserId));
+          if (!friend) return null;
+
+          const isOnline  = onlineUsers.includes(String(friend._id));
+          const isActive  = chat._id === activeChatId;
+          const lastMsg   = chat.lastMessage?.text || 'No messages yet';
+          const lastTime  = formatTime(chat.lastMessage?.createdAt || chat.updatedAt);
+          const unread    = chat.unreadCount || 0;
+
+          return (
+            <button
+              key={chat._id}
+              onClick={() => onSelectChat(chat)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left
+                          transition-all duration-150
+                          ${isActive
+                            ? 'bg-[#00e5a0]/10 border border-[#00e5a0]/20'
+                            : 'hover:bg-white/5 border border-transparent'}`}
+            >
+              {/* Avatar with online dot */}
+              <div className="relative shrink-0">
+                <img
+                  src={getAvatar(friend)}
+                  alt={friend.fullName || friend.username}
+                  className="w-10 h-10 rounded-2xl object-cover"
+                />
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full
+                                  border-2 border-[#15181f]
+                                  ${isOnline ? 'bg-[#00e5a0]' : 'bg-gray-600'}`} />
+              </div>
+
+              {/* Text block */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className={`text-sm font-medium truncate
+                                    ${isActive ? 'text-white' : unread > 0 ? 'text-white' : 'text-gray-200'}`}>
+                    {friend.fullName || friend.username}
+                  </span>
+                  <span className="text-[10px] text-gray-600 shrink-0">{lastTime}</span>
+                </div>
+
+                {friend.username && (
+                  <p className="text-[11px] text-[#00e5a0]/60 truncate">@{friend.username}</p>
+                )}
+
+                <div className="flex items-center justify-between gap-1 mt-0.5">
+                  <p className={`text-xs truncate flex-1
+                                 ${isActive ? 'text-[#00e5a0]/70'
+                                   : unread > 0 ? 'text-gray-300 font-medium'
+                                   : 'text-gray-500'}`}>
+                    {lastMsg}
+                  </p>
+
+                  {/* ✅ Unread badge */}
+                  {unread > 0 && !isActive && (
+                    <span className="shrink-0 min-w-[18px] h-[18px] rounded-full
+                                     bg-[#00e5a0] text-[#0f1117] text-[10px] font-bold
+                                     flex items-center justify-center px-1">
+                      {unread > 99 ? '99+' : unread}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* My profile at bottom */}
+      <div className="shrink-0 border-t border-white/[0.06] px-3 py-3 bg-[#15181f]">
+        <div
+          className="flex items-center gap-3 px-2 py-2 rounded-2xl hover:bg-white/5
+                     transition-colors cursor-pointer"
+          onClick={() => navigate('/settings')}
+        >
+          <div className="relative shrink-0">
+            <img
+              src={getAvatar({ _id: loggedInUserId, profilePic: localStorage.getItem('profilePic') })}
+              alt="me"
+              className="w-9 h-9 rounded-2xl object-cover"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full
+                             bg-[#00e5a0] border-2 border-[#15181f]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">
+              {localStorage.getItem('fullName') || 'You'}
+            </p>
+            <p className="text-[11px] text-[#00e5a0]/60 truncate">
+              @{localStorage.getItem('username') || ''}
+            </p>
+          </div>
+          <FiSettings size={14} className="text-gray-600 shrink-0" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatList;
