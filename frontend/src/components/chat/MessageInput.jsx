@@ -175,10 +175,19 @@ const MessageInput = ({ chatId, overrideOnSend, targetUserId }) => {
   const handleChange = (e) => {
     const value = e.target.value;
     setMessage(value);
+    console.log('🐛 DEBUG typing check:', {
+    targetUserId,
+    chatId,
+    hasTarget: !!targetUserId,
+    hasChat: !!chatId,
+  });
+
 
     if (!targetUserId || !chatId) return;
+    console.log('🐛 isTypingRef.current:', isTypingRef.current, 'socket.connected:', socket.connected);
 
     if (!isTypingRef.current) {
+      console.log('🐛 EMITTING typing event now');
       socket.emit('typing', {
         targetUserId,
         senderName: localStorage.getItem('fullName') || localStorage.getItem('username') || 'Someone',
