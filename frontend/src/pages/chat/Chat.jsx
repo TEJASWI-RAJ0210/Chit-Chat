@@ -8,7 +8,6 @@ import SearchFriend from '../../components/chat/SearchFriend.jsx';
 import socket, { setSocketUser } from '../../socket/socket.js';
 import api          from '../../services/api.js';
 import chatBg       from '../../assets/chat_bg.svg';
-import { useNavigate } from 'react-router-dom';
 
 const EmptyState = () => (
   <div className="flex flex-col flex-1 items-center justify-center bg-[#f7f8fc] gap-4">
@@ -33,9 +32,7 @@ const Chat = () => {
   const [messages,      setMessages]      = useState([]);
   const [showSearch,    setShowSearch]    = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
-  const [incomingCall,  setIncomingCall]  = useState(null);
   const [typingUser,    setTypingUser]    = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (myUserId) setSocketUser(myUserId);
@@ -137,13 +134,6 @@ const Chat = () => {
     };
   }, [activeChat]); // ✅ re-register whenever active chat changes
 
-  /* ── Incoming calls ── */
-  useEffect(() => {
-    const fn = (data) => setIncomingCall(data);
-    socket.on('incoming-call', fn);
-    return () => socket.off('incoming-call', fn);
-  }, []);
-
   const targetUserId = activeChat?.participants
     ?.find((u) => normalizeId(u._id) !== normalizeId(myUserId))?._id;
 
@@ -195,32 +185,6 @@ const Chat = () => {
         )}
       </div>
 
-      {incomingCall && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-96 shadow-2xl">
-            <h2 className="text-xl font-bold font-['Syne',sans-serif]">Incoming Video Call</h2>
-            <p className="mt-3 text-gray-500 text-sm">Someone is calling you...</p>
-            <div className="flex gap-4 mt-6">
-              <button
-                onClick={() => {
-                  socket.emit('accept-call', { callerId: incomingCall.callerId, receiverId: myUserId });
-                  navigate(`/video-call/${incomingCall.callerId}`);
-                  setIncomingCall(null);
-                }}
-                className="flex-1 bg-green-500 text-white py-2.5 rounded-xl font-medium hover:bg-green-600 transition-colors"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => setIncomingCall(null)}
-                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-medium hover:bg-red-600 transition-colors"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

@@ -53,6 +53,8 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
   useEffect(() => {
     const handleReceive = (newMsg) => {
       const incomingChatId = String(newMsg.chatID || newMsg.chatId || newMsg.chat);
+      const senderId = String(newMsg.senderID?._id || newMsg.senderID || '');
+      const sentByMe = senderId === String(loggedInUserId);
       setChats((prev) => {
         const updated = prev.map((chat) => {
           if (String(chat._id) !== incomingChatId) return chat;
@@ -68,7 +70,9 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
             // If it's open, Chat.jsx will call markSeen immediately anyway
             unreadCount: isActiveChat
               ? 0
-              : (chat.unreadCount || 0) + 1,
+              : sentByMe
+                ? (chat.unreadCount || 0)
+                : (chat.unreadCount || 0) + 1,
           };
         });
         const idx = updated.findIndex((c) => String(c._id) === incomingChatId);
@@ -96,7 +100,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
   }, [activeChatId]);
 
   const filtered = chats.filter((chat) => {
-    const friend = chat.participants.find((p) => p._id !== loggedInUserId);
+    const friend = chat.participants.find((p) => String(p._id) !== String(loggedInUserId));
     const name   = `${friend?.fullName || ''} ${friend?.username || ''}`.toLowerCase();
     return name.includes(search.toLowerCase());
   });
@@ -151,7 +155,7 @@ const ChatList = ({ onSelectChat, activeChatId }) => {
         )}
 
         {filtered.map((chat) => {
-          const friend    = chat.participants.find((p) => p._id !== loggedInUserId);
+          const friend    = chat.participants.find((p) => String(p._id) !== String(loggedInUserId));
           if (!friend) return null;
 
           const isOnline  = onlineUsers.includes(String(friend._id));

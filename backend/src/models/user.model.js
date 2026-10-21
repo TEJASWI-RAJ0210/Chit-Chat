@@ -47,6 +47,10 @@ const userSchema = new Schema({
         required: false,
         default: null,
     },        
+    lastSeen: {
+        type: Date,
+        default: null,
+    },
     
     password:{
         type: String,

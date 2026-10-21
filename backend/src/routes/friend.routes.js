@@ -12,7 +12,7 @@ router.get("/search/:username",protect, async (req, res) => {
     const user = await User.findOne({
         username: keyword,
         _id: { $ne: req.userId }
-    }).select("username profilePicture");
+    }).select("fullName username profilePic");
 
     if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user);

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Video, Phone, MoreVertical, Search, Info, X } from 'lucide-react';
 import socket from '../../socket/socket.js';
 import UserInfoCard from './UserInfoCard.jsx';
-import { useNavigate } from 'react-router-dom';
 
 const getAvatar = (user) =>
   user?.profilePic ||
@@ -18,10 +17,9 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
   const [matches,     setMatches]     = useState([]);
   const searchRef = useRef(null);
   const menuRef   = useRef(null);
-  const navigate  = useNavigate();
 
-  const otherUser = chat?.participants?.find((u) => u._id !== myUserId);
- const isOnline = onlineUsers.includes(String(otherUser?._id));
+  const otherUser = chat?.participants?.find((u) => String(u._id) !== String(myUserId));
+  const isOnline = onlineUsers.includes(String(otherUser?._id));
 
   /* ── Online users ── */
   useEffect(() => {
@@ -33,19 +31,6 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
     socket.emit('request-online-users');
 
     return () => socket.off('online-users', fn);
-  }, []);
-
-  /* ── Incoming call ── */
-  useEffect(() => {
-    // ✅ Store reference so we can remove exactly this handler
-    const handleIncomingCall = (data) => {
-      console.log('Incoming call:', data);
-      alert(`Incoming call from ${data.callerId}`);
-    };
-
-    socket.on('incoming-call', handleIncomingCall);
-    // ✅ Pass the reference — without it socket.off removes ALL incoming-call listeners
-    return () => socket.off('incoming-call', handleIncomingCall);
   }, []);
 
   /* ── Close menu on outside click ── */
@@ -87,28 +72,29 @@ const ChatHeader = ({ chat, myUserId, messages = [], onSearchResult,typingUser }
   const closeSearch = () => { setShowSearch(false); onSearchResult?.(null); };
 
   useEffect(() => {
-  const handleAccepted = ({ receiverId }) => {
-    console.log("✅ Call Accepted");
-
-    navigate(`/video-call/${receiverId}`);
+  const handleCallFailed = ({ reason }) => {
+    window.alert(reason === 'offline' ? 'This person is offline.' : 'Unable to start the call. Please try again.');
   };
 
-  socket.on("call-accepted", handleAccepted);
+  const handleCallRejected = () => window.alert('The call was declined.');
+
+  socket.on("call-failed", handleCallFailed);
+  socket.on("call-rejected", handleCallRejected);
 
   return () => {
-    socket.off("call-accepted", handleAccepted);
+    socket.off("call-failed", handleCallFailed);
+    socket.off("call-rejected", handleCallRejected);
   };
-}, [navigate]);
+}, []);
 
   const handleVideoCall = () => {
   if (!otherUser?._id) return;
-
+  const callId = crypto.randomUUID();
   socket.emit("call-user", {
     targetUserId: otherUser._id,
-    callerId: myUserId,
+    callId,
+    chatId: chat._id,
   });
-
-  console.log("📞 Calling...");
 };
   return (
     <>

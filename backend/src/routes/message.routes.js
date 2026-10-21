@@ -6,13 +6,10 @@ import { protect } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-// ── Helper: emit an event to every online participant of a chat ──
-// ✅ FIX 2: onlineUsers stores a single socketId per user (string),
-// not a Set. The old code did `for (const socketId of sockets)` which
-// silently iterated individual CHARACTERS of the socket ID string.
+// Emit directly to every connected device for each chat participant.
 const emitToParticipants = async (req, chatId, event, payload) => {
   const io          = req.app.get('io');
-  const onlineUsers = req.app.get('onlineUsers'); // Map<userId, socketId>
+  const onlineUsers = req.app.get('onlineUsers'); // Map<userId, Set<socketId>>
   if (!io || !onlineUsers) return;
 
   try {
@@ -21,9 +18,9 @@ const emitToParticipants = async (req, chatId, event, payload) => {
 
     for (const participantId of chatDoc.participants) {
       const pid      = String(participantId);
-      const socketId = onlineUsers.get(pid); // ✅ single string, not a Set
-      if (socketId) {
-        io.to(socketId).emit(event, payload);
+      const socketIds = onlineUsers.get(pid);
+      if (socketIds instanceof Set) {
+        for (const socketId of socketIds) io.to(socketId).emit(event, payload);
       }
     }
   } catch (e) {
@@ -90,10 +87,8 @@ router.post('/', protect, async (req, res) => {
 
     const io = req.app.get('io');
     if (io) {
-      // Room-based emit (works once both users have called joinChat)
-      io.to(chat).emit('receiveMessage', populated);
-      // Direct emit as a backup — reaches participants even if they
-      // haven't joined the room yet (e.g. chat list view)
+      // Direct delivery reaches each participant's connected devices once,
+      // including devices that are currently showing the chat list.
       await emitToParticipants(req, chat, 'receiveMessage', populated);
     }
 
@@ -140,7 +135,6 @@ router.put('/:chatId/seen', protect, async (req, res) => {
     };
 
     if (io) {
-      io.to(chatId).emit('messages-seen', payload);
       await emitToParticipants(req, chatId, 'messages-seen', payload);
     }
 

@@ -8,6 +8,7 @@ import Chat from "./pages/chat/Chat.jsx";
 import ChatAiPage from "./pages/chat/ChatAiPage.jsx";
 import SearchFriendPage from "./pages/chat/SearchFriendPage.jsx";
 import VideoCall from "./pages/chat/VideoCall.jsx";
+import CallManager from "./components/chat/CallManager.jsx";
 
 const App = () => {
   // useEffect(() => {
@@ -22,6 +23,7 @@ const App = () => {
 
   return (
     <BrowserRouter>
+      <CallManager />
       <Routes>
         <Route path="/" element={<SignIn />} />
         <Route path="/UserName" element={<UserName />} />
